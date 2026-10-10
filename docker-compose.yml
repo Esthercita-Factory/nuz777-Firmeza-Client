@@ -1,0 +1,10 @@
+services:
+  client:
+    image: ${FIRMEZA_CLIENT_IMAGE:-ghcr.io/esthercita-factory/nuz777-firmeza-client:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firmeza-client
+    restart: unless-stopped
+    ports:
+      - "8081:80"

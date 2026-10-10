@@ -1,0 +1,11 @@
+.git
+.github
+node_modules
+dist
+.angular
+.vscode
+.idea
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
