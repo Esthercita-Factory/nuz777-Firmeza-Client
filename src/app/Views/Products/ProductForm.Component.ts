@@ -7,6 +7,30 @@ import { AdminNotificationService } from '../../Services/admin-notification.serv
 import { ToastService } from '../../Services/imports.service';
 import { ProductRequest, ProductsService } from '../../Services/products.service';
 
+export enum ProductCategory {
+  Cementos = 'Cementos',
+  Aceros = 'Aceros',
+  Mamposteria = 'Mampostería',
+  Tuberias = 'Tuberías',
+  Herramientas = 'Herramientas',
+  Acabados = 'Acabados',
+  Electricos = 'Eléctricos',
+  Agregados = 'Agregados',
+  Madera = 'Madera'
+}
+
+export const PRESET_CATEGORIES: readonly ProductCategory[] = [
+  ProductCategory.Cementos,
+  ProductCategory.Aceros,
+  ProductCategory.Mamposteria,
+  ProductCategory.Tuberias,
+  ProductCategory.Herramientas,
+  ProductCategory.Acabados,
+  ProductCategory.Electricos,
+  ProductCategory.Agregados,
+  ProductCategory.Madera
+];
+
 @Component({
   selector: 'app-product-form',
   imports: [FormsModule, RouterLink],
@@ -118,19 +142,89 @@ import { ProductRequest, ProductsService } from '../../Services/products.service
                 }
               </div>
 
-              <!-- Categoría -->
-              <div class="space-y-1.5">
-                <label for="category" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Categoría <span class="text-rose-500">*</span>
-                </label>
-                <input
-                  id="category"
-                  name="category"
-                  [(ngModel)]="form.category"
-                  placeholder="Ej.: Cementos, Aceros, Acabados"
-                  class="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
-                  [class.border-rose-400]="fieldError('category')"
-                />
+              <!-- Categoría con Enum estándar y soporte para nueva categoría -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <label for="category" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Categoría <span class="text-rose-500">*</span>
+                  </label>
+                  <span class="text-[11px] text-slate-400 font-medium">
+                    {{ isCustomCategory ? 'Categoría nueva' : 'Categoría del catálogo' }}
+                  </span>
+                </div>
+
+                <!-- Desplegable de selección estándar -->
+                <div class="relative">
+                  <select
+                    id="category"
+                    name="category"
+                    [ngModel]="selectedCategoryOption"
+                    (ngModelChange)="onCategoryOptionChange($event)"
+                    class="w-full appearance-none rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 pr-10"
+                    [class.border-rose-400]="fieldError('category')"
+                  >
+                    <option value="" disabled>-- Selecciona una categoría --</option>
+                    @for (cat of presetCategories; track cat) {
+                      <option [value]="cat">{{ cat }}</option>
+                    }
+                    <option value="__custom__">+ Otra categoría (escribir nueva)...</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-slate-400">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Campo de texto si se elige escribir una nueva categoría -->
+                @if (isCustomCategory) {
+                  <div class="space-y-1.5 pt-1">
+                    <label for="customCategoryInput" class="block text-[11px] font-bold uppercase tracking-wider text-blue-700">
+                      Nombre de la nueva categoría <span class="text-rose-500">*</span>
+                    </label>
+                    <input
+                      id="customCategoryInput"
+                      name="customCategoryInput"
+                      [ngModel]="customCategoryName"
+                      (ngModelChange)="onCustomCategoryInput($event)"
+                      placeholder="Escribe el nombre de la nueva categoría..."
+                      class="w-full rounded-xl border border-blue-300 bg-blue-50/30 px-4 py-2.5 text-sm font-medium text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+                      [class.border-rose-400]="fieldError('category')"
+                    />
+                  </div>
+                }
+
+                <!-- Sugerencias rápidas en chips/pastillas -->
+                <div class="pt-1">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                    Sugerencias rápidas:
+                  </span>
+                  <div class="flex flex-wrap gap-1.5">
+                    @for (cat of presetCategories; track cat) {
+                      <button
+                        type="button"
+                        (click)="selectPresetCategory(cat)"
+                        class="rounded-lg px-2.5 py-1 text-xs font-semibold transition"
+                        [class]="selectedCategoryOption === cat
+                          ? 'bg-blue-600 text-white shadow-xs font-bold ring-2 ring-blue-600/30'
+                          : 'border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white hover:text-slate-900'"
+                      >
+                        {{ cat }}
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      (click)="enableCustomCategory()"
+                      class="rounded-lg px-2.5 py-1 text-xs font-semibold transition border border-dashed"
+                      [class]="isCustomCategory
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-bold'
+                        : 'border-slate-300 bg-white text-slate-500 hover:border-blue-400 hover:text-blue-600'"
+                    >
+                      + Otra...
+                    </button>
+                  </div>
+                </div>
+
                 @if (fieldError('category'); as message) {
                   <p class="text-xs font-medium text-rose-600 flex items-center gap-1">
                     <span class="h-1 w-1 rounded-full bg-rose-600"></span>{{ message }}
@@ -336,6 +430,11 @@ export class ProductFormComponent implements OnInit {
     isActive: true
   };
 
+  protected readonly presetCategories = PRESET_CATEGORIES;
+  protected selectedCategoryOption = '';
+  protected isCustomCategory = false;
+  protected customCategoryName = '';
+
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -352,6 +451,7 @@ export class ProductFormComponent implements OnInit {
     const id = this.id();
     if (!id) {
       this.restoreDraft();
+      this.syncCategoryState();
       return;
     }
 
@@ -370,6 +470,7 @@ export class ProductFormComponent implements OnInit {
           isActive: product.isActive
         };
         this.restoreDraft();
+        this.syncCategoryState();
       },
       error: (error) => {
         this.loading.set(false);
@@ -457,6 +558,70 @@ export class ProductFormComponent implements OnInit {
     try {
       localStorage.removeItem(this.draftKey);
     } catch {}
+    this.selectedCategoryOption = '';
+    this.isCustomCategory = false;
+    this.customCategoryName = '';
+  }
+
+  protected syncCategoryState(): void {
+    const current = (this.form.category || '').trim();
+    if (!current) {
+      this.selectedCategoryOption = '';
+      this.isCustomCategory = false;
+      this.customCategoryName = '';
+      return;
+    }
+
+    const matched = this.presetCategories.find(
+      (cat) => cat.toLowerCase() === current.toLowerCase()
+    );
+
+    if (matched) {
+      this.selectedCategoryOption = matched;
+      this.form.category = matched;
+      this.isCustomCategory = false;
+      this.customCategoryName = '';
+    } else {
+      this.selectedCategoryOption = '__custom__';
+      this.isCustomCategory = true;
+      this.customCategoryName = current;
+    }
+  }
+
+  protected onCategoryOptionChange(value: string): void {
+    this.selectedCategoryOption = value;
+    if (value === '__custom__') {
+      this.isCustomCategory = true;
+      this.form.category = this.customCategoryName.trim();
+    } else if (value) {
+      this.isCustomCategory = false;
+      this.form.category = value;
+    } else {
+      this.isCustomCategory = false;
+      this.form.category = '';
+    }
+    this.saveDraft();
+  }
+
+  protected onCustomCategoryInput(value: string): void {
+    this.customCategoryName = value;
+    this.form.category = value;
+    this.saveDraft();
+  }
+
+  protected selectPresetCategory(cat: ProductCategory): void {
+    this.selectedCategoryOption = cat;
+    this.isCustomCategory = false;
+    this.customCategoryName = '';
+    this.form.category = cat;
+    this.saveDraft();
+  }
+
+  protected enableCustomCategory(): void {
+    this.selectedCategoryOption = '__custom__';
+    this.isCustomCategory = true;
+    this.form.category = this.customCategoryName.trim();
+    this.saveDraft();
   }
 
   private restoreDraft(): void {

@@ -69,9 +69,9 @@ import { IconComponent } from '../Shared/Icon.Component';
     @if (data(); as dashboard) {
       <!-- Banner de alerta destacada para solicitudes pendientes -->
       @if (dashboard.pendingSaleCount > 0) {
-        <div class="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border-2 border-amber-300 bg-gradient-to-r from-amber-50 via-amber-100/50 to-orange-50 p-5 shadow-sm">
+        <div class="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border-2 border-amber-300 bg-amber-50/90 p-5 shadow-sm dark:border-amber-500/40 dark:bg-[#1a1408] dark:shadow-lg dark:shadow-black/60">
           <div class="flex items-center gap-3.5">
-            <div class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-200">
+            <div class="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/30">
               <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -82,15 +82,15 @@ import { IconComponent } from '../Shared/Icon.Component';
               </span>
             </div>
             <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-black text-amber-950">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-sm font-black text-amber-950 dark:text-amber-200">
                   {{ dashboard.pendingSaleCount === 1 ? 'Tienes 1 solicitud de producto pendiente' : 'Tienes ' + dashboard.pendingSaleCount + ' solicitudes de producto pendientes' }}
                 </h3>
-                <span class="rounded-full bg-amber-200/80 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-900">
+                <span class="rounded-full bg-amber-200/90 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-900 dark:bg-amber-500/25 dark:text-amber-300 dark:border dark:border-amber-500/40">
                   Atención requerida
                 </span>
               </div>
-              <p class="mt-0.5 text-xs text-amber-800/80">
+              <p class="mt-1 text-xs font-semibold text-amber-900/90 dark:text-amber-300/90">
                 Hay clientes que enviaron compras desde el portal y están esperando tu aprobación para el despacho.
               </p>
             </div>
@@ -98,7 +98,7 @@ import { IconComponent } from '../Shared/Icon.Component';
           <a
             routerLink="/ventas"
             [queryParams]="{ status: 'Pending' }"
-            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-slate-800 active:scale-95"
+            class="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-slate-800 active:scale-95 dark:bg-amber-500 dark:text-slate-950 dark:hover:bg-amber-400"
           >
             Revisar solicitudes ahora <span aria-hidden="true">→</span>
           </a>

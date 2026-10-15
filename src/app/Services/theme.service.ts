@@ -16,12 +16,13 @@ export class ThemeService {
   private initTheme(): void {
     if (typeof window === 'undefined') return;
     const stored = localStorage.getItem(this.storageKey);
-    // Si el usuario guardó explícitamente 'light', usar light.
-    // De lo contrario, por defecto modo oscuro puro (OLED).
     if (stored === 'light') {
       this.setDark(false);
-    } else {
+    } else if (stored === 'dark') {
       this.setDark(true);
+    } else {
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      this.setDark(prefersDark);
     }
   }
 

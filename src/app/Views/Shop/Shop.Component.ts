@@ -11,6 +11,7 @@ import { Product, ProductsService } from '../../Services/products.service';
 import { ToastService } from '../../Services/imports.service';
 import { ConfirmService } from '../../Services/confirm.service';
 import { IconComponent } from '../Shared/Icon.Component';
+import Swal from 'sweetalert2';
 
 export interface CatalogProduct extends Product {
   readonly image: string;
@@ -28,31 +29,6 @@ export interface CatalogProduct extends Product {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8">
-      <!-- ALERTA DE CLIENTE PENDIENTE DE APROBACIÓN -->
-      @if (isCustomerPending()) {
-        <div class="relative overflow-hidden rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-5 text-amber-900 shadow-sm backdrop-blur-sm">
-          <div class="flex items-start gap-3.5">
-            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/20">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <h3 class="text-sm font-black text-amber-950">Tu solicitud de cuenta de cliente está en revisión</h3>
-                <span class="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-900 border border-amber-300">
-                  Pendiente de aprobación
-                </span>
-              </div>
-              <p class="mt-1 text-xs text-amber-800 leading-relaxed">
-                ¡Gracias por registrarte en Ferretería Firmeza! Nuestro equipo administrativo está validando tus datos comerciales. Mientras tanto, puedes explorar el catálogo de materiales y precios. En cuanto tu solicitud sea aprobada, podrás armar pedidos y solicitar despachos a pie de obra.
-              </p>
-            </div>
-          </div>
-        </div>
-      }
-
       <!-- HERO BANNER CON SKYLINE Y RESUMEN DEL PEDIDO -->
       <section class="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-6 sm:p-8 lg:p-10 text-white shadow-2xl shadow-slate-950/20">
         <!-- Malla arquitectónica en el banner -->
@@ -94,9 +70,23 @@ export interface CatalogProduct extends Product {
 
         <div class="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-center">
           <div class="lg:col-span-8">
-            <div class="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-blue-300 backdrop-blur-md">
-              <span class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
-              Suministros certificados · Ferretería Firmeza
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-blue-300 backdrop-blur-md">
+                <span class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
+                Suministros certificados · Ferretería Firmeza
+              </div>
+
+              @if (isCustomerPending()) {
+                <button
+                  type="button"
+                  (click)="showPendingSweetAlert()"
+                  class="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-300 backdrop-blur-md hover:bg-amber-500/25 transition cursor-pointer"
+                  title="Ver estado de tu solicitud de cuenta"
+                >
+                  <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+                  Cuenta en revisión · Más información
+                </button>
+              }
             </div>
 
             <h1 class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
@@ -555,37 +545,24 @@ export interface CatalogProduct extends Product {
               </div>
             </article>
           } @empty {
-            <div class="rounded-3xl border border-slate-200 bg-white/90 p-8 sm:p-12 text-center shadow-sm sm:col-span-2 lg:col-span-3 xl:col-span-4">
-              @if (isCustomerPending()) {
-                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 shadow-sm">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                </div>
-                <h3 class="mt-4 text-base font-bold text-slate-800">Solicitud en proceso de validación</h3>
-                <p class="mt-1.5 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                  Tu solicitud de registro como cliente está siendo procesada por nuestro equipo administrativo. Tan pronto sea aceptada, se habilitará todo el catálogo y la posibilidad de cotizar y solicitar materiales.
-                </p>
-              } @else {
-                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8">
-                    <circle cx="11" cy="11" r="8" />
-                    <path d="m21 21-4.3-4.3" />
-                  </svg>
-                </div>
-                <h3 class="mt-4 text-base font-bold text-slate-800">No se encontraron productos</h3>
-                <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                  No hay materiales que coincidan con los criterios seleccionados. Prueba con otro término o limpia los filtros.
-                </p>
-                <button
-                  type="button"
-                  (click)="resetFilters()"
-                  class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600"
-                >
-                  Ver todos los productos
-                </button>
-              }
+            <div class="rounded-3xl border border-slate-200 bg-white/90 p-8 sm:p-12 text-center shadow-sm sm:col-span-2 lg:col-span-3 xl:col-span-4 dark:border-slate-800 dark:bg-slate-900/90">
+              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.3-4.3" />
+                </svg>
+              </div>
+              <h3 class="mt-4 text-base font-bold text-slate-800 dark:text-slate-100">No se encontraron productos</h3>
+              <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto dark:text-slate-400">
+                No hay materiales que coincidan con los criterios seleccionados. Prueba con otro término o limpia los filtros.
+              </p>
+              <button
+                type="button"
+                (click)="resetFilters()"
+                class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500"
+              >
+                Ver todos los productos
+              </button>
             </div>
           }
         </div>
@@ -712,10 +689,53 @@ export class ShopComponent implements OnInit, OnDestroy {
     }));
   });
 
+  private static hasShownPendingAlertInSession = false;
+
+  protected showPendingSweetAlert(): void {
+    void Swal.fire({
+      icon: 'info',
+      title: 'Tu solicitud está en revisión',
+      html: `
+        <div style="text-align: left; font-size: 14px; line-height: 1.6; padding: 4px 0;">
+          <p style="margin-bottom: 8px;">
+            ¡Gracias por registrarte en <strong>Ferretería Firmeza</strong>!
+          </p>
+          <p style="margin-bottom: 8px;">
+            Tu solicitud de cuenta de cliente se encuentra actualmente <strong>en proceso de validación</strong> por parte de nuestro equipo administrativo.
+          </p>
+          <p style="font-size: 12.5px; opacity: 0.85; margin-top: 12px; border-top: 1px dashed rgba(148, 163, 184, 0.4); padding-top: 10px;">
+            Mientras tanto, puedes explorar libremente nuestro catálogo de materiales y precios de venta. En cuanto tu solicitud sea aprobada, podrás armar pedidos y solicitar despachos a pie de obra.
+          </p>
+        </div>
+      `,
+      confirmButtonText: 'Entendido, ver catálogo',
+      confirmButtonColor: '#2563eb',
+      width: '460px',
+      customClass: {
+        popup: 'rounded-3xl shadow-2xl',
+        confirmButton: 'rounded-xl px-6 py-2.5 font-bold text-xs uppercase tracking-wider'
+      }
+    });
+  }
+
+  protected checkPendingCustomerAlert(): void {
+    if (ShopComponent.hasShownPendingAlertInSession) return;
+    if (this.isCustomerPending()) {
+      ShopComponent.hasShownPendingAlertInSession = true;
+      this.showPendingSweetAlert();
+    }
+  }
+
   ngOnInit(): void {
     if (this.authService?.isAuthenticated()) {
-      this.authService.me().subscribe({ error: () => {} });
+      this.authService.me().subscribe({
+        next: () => {
+          this.checkPendingCustomerAlert();
+        },
+        error: () => {}
+      });
     }
+    this.checkPendingCustomerAlert();
     this.load();
     this.stockChangeSub = this.notificationService.stockOrSaleChanged$.subscribe(() => {
       // Recargar catálogo silenciosamente en tiempo real al confirmar ventas o actualizar stock

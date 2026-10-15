@@ -2,13 +2,74 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 @source './app/**/*.ts';
 @source './index.html';
 
+/* ==============================================================================
+   DESIGN SYSTEM TOKENS - FERRETERÍA FIRMEZA (LOGIN & REGISTRO)
+   ============================================================================== */
+:root {
+  color-scheme: light;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --auth-bg-gradient: linear-gradient(135deg, #eef3fb 0%, #e6effa 50%, #dde7f6 100%);
+  --auth-card-bg: #ffffff;
+  --auth-card-border: #d5deee;
+  --auth-text: #0d1424;
+  --auth-text-secondary: #68748d;
+  --auth-primary: #1a5cff;
+  --auth-primary-hover: #3b82f6;
+  --auth-success: #22c55e;
+  --auth-input-bg: #f8fafc;
+  --auth-input-border: #d5deee;
+}
+
+html:not(.dark) {
+  color-scheme: light !important;
+}
+
+html.dark {
+  color-scheme: dark;
+  --auth-bg-gradient: #05070b;
+  --auth-card-bg: #0c1017;
+  --auth-card-border: #1d2433;
+  --auth-text: #f4f6fb;
+  --auth-text-secondary: #7f899e;
+  --auth-primary: #1a5cff;
+  --auth-primary-hover: #3b82f6;
+  --auth-success: #22c55e;
+  --auth-input-bg: #080b11;
+  --auth-input-border: #1d2433;
+}
+
+/* Transición suave de 200ms en colores */
+@media (prefers-reduced-motion: no-preference) {
+  .theme-transition {
+    transition: background-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
 /* overflow-x: hidden crea un contenedor de scroll y rompe position: sticky.
    clip recorta sin crear ese contenedor. */
+html,
 body {
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.012em;
   overflow-x: clip;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
 }
 
 app-root,
@@ -258,13 +319,13 @@ html.dark {
   color-scheme: dark;
 }
 
-/* Fondo principal ultra negro con gradiente radial imperceptible de profundidad */
+/* Fondo principal en modo oscuro: tono sobrio y elegante sin gradientes neón */
 html.dark,
 html.dark body {
-  background-color: #000000 !important;
-  background-image: radial-gradient(circle at 50% -20%, #0c1830 0%, #030712 50%, #000000 100%) !important;
-  background-attachment: fixed !important;
-  color: #f8fafc !important;
+  background-color: #05070b !important;
+  background-image: none !important;
+  background-attachment: scroll !important;
+  color: #f4f6fb !important;
 }
 
 /* Fondos y tarjetas en modo oscuro */
@@ -306,12 +367,66 @@ html.dark [class*="bg-slate-300"] {
   background-color: #272c3d !important;
 }
 
-/* Degradados de pantalla y headers (excluyendo overlays de imágenes y elementos con clip text) */
-html.dark .bg-gradient-to-br:not(.bg-clip-text):not(.card-image-overlay):not(.product-card-overlay):not([data-keep-gradient]),
-html.dark .bg-gradient-to-b:not(.bg-clip-text):not(.card-image-overlay):not(.product-card-overlay):not([data-keep-gradient]),
-html.dark [class*="bg-gradient-to-"]:not(.bg-clip-text):not(.card-image-overlay):not(.product-card-overlay):not([class*="from-slate-950"]):not([data-keep-gradient]) {
+/* Degradados de pantalla y headers (excluyendo overlays de imágenes, botones y elementos con colores propios) */
+html.dark .bg-gradient-to-br:not(.bg-clip-text):not(.card-image-overlay):not(.product-card-overlay):not([data-keep-gradient]):not(button):not([type="submit"]):not([class*="from-[#1a5cff]"]):not([class*="from-[#22c55e]"]):not([class*="from-blue"]):not([class*="from-emerald"]):not([class*="progress-bar-"]),
+html.dark .bg-gradient-to-b:not(.bg-clip-text):not(.card-image-overlay):not(.product-card-overlay):not([data-keep-gradient]):not(button):not([type="submit"]):not([class*="from-[#1a5cff]"]):not([class*="from-[#22c55e]"]):not([class*="from-blue"]):not([class*="from-emerald"]):not([class*="progress-bar-"]),
+html.dark [class*="bg-gradient-to-"]:not(.bg-clip-text):not(.card-image-overlay):not(.product-card-overlay):not([class*="from-slate-950"]):not([data-keep-gradient]):not(button):not([type="submit"]):not([class*="from-[#1a5cff]"]):not([class*="from-[#22c55e]"]):not([class*="from-blue"]):not([class*="from-emerald"]):not([class*="progress-bar-"]) {
   background-image: none !important;
   background-color: #000000 !important;
+}
+
+/* Botones principales y acciones destacadas: SIEMPRE en azul vibrante en modo claro y oscuro */
+button.btn-primary-gradient,
+[type="submit"].btn-primary-gradient,
+.btn-primary-gradient,
+html.dark button.btn-primary-gradient,
+html.dark [type="submit"].btn-primary-gradient,
+html.dark .btn-primary-gradient {
+  background-image: linear-gradient(to right, #1a5cff, #2563eb) !important;
+  background-color: #1a5cff !important;
+  color: #ffffff !important;
+}
+
+button.btn-primary-gradient:hover,
+[type="submit"].btn-primary-gradient:hover,
+.btn-primary-gradient:hover,
+html.dark button.btn-primary-gradient:hover,
+html.dark [type="submit"].btn-primary-gradient:hover,
+html.dark .btn-primary-gradient:hover {
+  background-image: linear-gradient(to right, #3b82f6, #1a5cff) !important;
+  background-color: #3b82f6 !important;
+}
+
+/* Barras de disponibilidad y logística en Login */
+.progress-bar-blue,
+html.dark .progress-bar-blue {
+  background-image: linear-gradient(to right, #1a5cff, #3b82f6) !important;
+  background-color: #1a5cff !important;
+}
+
+.progress-bar-green,
+html.dark .progress-bar-green {
+  background-image: linear-gradient(to right, #22c55e, #34d399) !important;
+  background-color: #22c55e !important;
+}
+
+/* Cuadros de selección (checkboxes) en modo claro y oscuro */
+input[type="checkbox"] {
+  accent-color: #1a5cff;
+}
+
+html:not(.dark) input[type="checkbox"] {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  border-color: #d5deee !important;
+  accent-color: #1a5cff !important;
+}
+
+html.dark input[type="checkbox"] {
+  color-scheme: dark !important;
+  background-color: #0c1017 !important;
+  border-color: #1d2433 !important;
+  accent-color: #1a5cff !important;
 }
 
 /* Asegurar que las imágenes fotográficas de productos y sus capas protectoras no se cubran de negro opaco */
@@ -592,7 +707,11 @@ html.dark .border-amber-300 {
 html.dark .text-amber-700,
 html.dark .text-amber-800,
 html.dark .text-amber-900,
-html.dark .text-amber-950 {
+html.dark .text-amber-950,
+html.dark [class*="text-amber-700"],
+html.dark [class*="text-amber-800"],
+html.dark [class*="text-amber-900"],
+html.dark [class*="text-amber-950"] {
   color: #fde68a !important;
 }
 
@@ -964,9 +1083,49 @@ html.dark .auth-card {
 
 /* Notificaciones y Dropdown */
 html.dark .notification-dropdown-container > div {
-  background-color: #08080b !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95) !important;
+  background-color: #121622 !important;
+  border-color: #252c3f !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+html.dark .notification-dropdown-container button {
+  color: #e2e8f0;
+}
+
+html.dark .notification-dropdown-container button:hover {
+  color: #ffffff !important;
+}
+
+/* Pestañas de notificación: sin parpadeo, sin borde blanco ni outline de foco */
+.notification-tab-btn,
+button.notification-tab-btn,
+html.dark .notification-tab-btn,
+html.dark .notification-dropdown-container button.notification-tab-btn,
+html.dark .notification-dropdown-container button.notification-tab-btn.bg-white,
+html.dark .notification-dropdown-container button.notification-tab-btn[class*="bg-white"] {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.notification-tab-btn:focus,
+.notification-tab-btn:active,
+.notification-tab-btn:focus-visible,
+html.dark .notification-tab-btn:focus,
+html.dark .notification-tab-btn:active,
+html.dark .notification-tab-btn:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+html.dark .notification-dropdown-container button.bg-white,
+html.dark .notification-dropdown-container button[class*="bg-white"] {
+  background-color: #2a344d !important;
+  color: #ffffff !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 
 /* Malla arquitectónica decorativa */
@@ -1039,5 +1198,74 @@ html.dark ::-webkit-scrollbar-thumb {
 
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: #3b82f6;
+}
+
+/* ==============================================================================
+   OPTIMIZACIÓN DE RENDIMIENTO EN CELULAR (< 768px):
+   DESACTIVAR TODAS LAS ANIMACIONES, TRANSICIONES Y FILTROS PESADOS
+   ============================================================================== */
+@media (max-width: 768px) {
+  /* 1. Anular duraciones de animación y transición en celular para eliminar lag */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Excepción: permitir spinner de carga en botones o estados de carga para dar feedback al usuario */
+  .animate-spin,
+  svg.animate-spin,
+  [class*="animate-spin"] {
+    animation: spin 1s linear infinite !important;
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  /* 2. Desactivar animaciones continuas e intensivas */
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce,
+  .animate-rise,
+  .animate-rise-1,
+  .animate-rise-2,
+  .animate-rise-3,
+  .animate-rise-4,
+  .animate-rise-5,
+  .animate-shake,
+  .animate-donut-pop,
+  .animate-donut-center,
+  .animate-slide-in-left,
+  .auth-blob,
+  .auth-card,
+  .auth-card-badge,
+  .toast-enter,
+  .theme-transition,
+  app-shell main > * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  /* 3. Desactivar backdrop-filter y filtros de desenfoque masivos que ahogan la GPU móvil */
+  [class*="backdrop-blur"],
+  [class*="blur-3xl"],
+  [class*="blur-2xl"],
+  [class*="blur-xl"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+  }
+
+  /* 4. Ocultar orbes y mallas decorativas pesadas de fondo en celular */
+  .auth-grid,
+  .pointer-events-none[class*="blur-3xl"],
+  .pointer-events-none[class*="blur-2xl"] {
+    display: none !important;
+  }
 }
 

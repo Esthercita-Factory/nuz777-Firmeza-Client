@@ -49,12 +49,7 @@ import { ThemeService } from '../../Services/theme.service';
         (click)="theme.toggle()"
         [attr.aria-label]="theme.isDark() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
         [attr.title]="theme.isDark() ? 'Activar modo claro' : 'Activar modo oscuro'"
-        class="relative inline-flex items-center justify-center rounded-xl border transition-all duration-200 active:scale-95 cursor-pointer"
-        [class]="
-          size() === 'sm'
-            ? 'h-9 w-9 p-2'
-            : 'h-10 w-10 p-2.5'
-        "
+        class="relative inline-flex items-center justify-center rounded-xl border transition-all duration-200 active:scale-95 cursor-pointer min-h-[40px] min-w-[40px] h-10 w-10 p-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a5cff]"
         [class.theme-toggle-dark]="theme.isDark()"
         [class.theme-toggle-light]="!theme.isDark()"
       >

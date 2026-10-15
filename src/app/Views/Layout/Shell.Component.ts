@@ -34,9 +34,9 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
   selector: 'app-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, CurrencyPipe, DatePipe, ThemeToggleComponent],
   template: `
-    <div class="flex min-h-screen flex-col">
+    <div class="flex min-h-screen flex-col bg-[#f8fafc] dark:bg-[#05070b]">
       <aside
-        class="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-white/60 bg-white/40 text-slate-700 shadow-xl shadow-slate-200/60 backdrop-blur-2xl transition-transform duration-300 lg:block"
+        class="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-slate-200/80 bg-white/95 text-slate-700 shadow-xl shadow-slate-200/60 backdrop-blur-2xl transition-transform duration-300 lg:block dark:border-[#1d2433] dark:bg-[#0c1017] dark:text-slate-300 dark:shadow-black/60"
         [class]="sidebarOpen() ? '' : '-translate-x-full'"
       >
         <div class="flex h-full flex-col px-5 py-6">
@@ -110,7 +110,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
       </button>
 
       <div class="flex min-h-screen flex-col" [class]="sidebarOpen() ? 'lg:pl-72' : ''">
-        <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-lg">
+        <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 dark:border-[#1d2433] dark:bg-[#0c1017]/90 backdrop-blur-lg">
           <div class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-5 lg:px-8">
             <a routerLink="/dashboard" class="flex items-center gap-2 lg:hidden">
               <app-logo size="sm" />
@@ -142,8 +142,8 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                   aria-haspopup="true"
                   class="relative flex h-10 w-10 items-center justify-center rounded-xl border transition shadow-sm"
                   [class]="notificationsOpen()
-                    ? 'border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-100'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600'"
+                    ? 'border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-100 dark:border-blue-500 dark:bg-blue-950/70 dark:text-blue-400 dark:ring-blue-900/60'
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 dark:border-slate-700/80 dark:bg-[#151926] dark:text-slate-200 dark:hover:border-blue-400 dark:hover:text-blue-400'"
                   (click)="toggleNotifications($event)"
                   title="Ver vista previa de notificaciones"
                 >
@@ -161,22 +161,22 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                 <!-- Vista previa de Notificaciones (Dropdown Panel) -->
                 @if (notificationsOpen()) {
                   <div
-                    class="absolute -right-20 sm:-right-28 lg:-right-36 top-full mt-2.5 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/15 z-50 overflow-hidden"
+                    class="absolute -right-20 sm:-right-28 lg:-right-36 top-full mt-2.5 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/15 z-50 overflow-hidden dark:bg-[#121622] dark:border-[#252c3f] dark:shadow-black/90"
                     (click)="$event.stopPropagation()"
                   >
                     <!-- Cabecera del Panel -->
-                    <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5">
+                    <div class="border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-5 dark:border-[#252c3f] dark:bg-[#161c2b]">
                       <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2.5">
-                          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-950/70 dark:text-blue-400">
                             <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                             </svg>
                           </span>
                           <div>
-                            <h3 class="text-xs font-black uppercase tracking-wider text-slate-900">Notificaciones</h3>
-                            <p class="text-[11px] text-slate-500 font-medium">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Notificaciones</h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                               @if (totalNotificationsCount() > 0) {
                                 {{ totalNotificationsCount() }} pendientes de atención
                               } @else {
@@ -191,7 +191,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                           }
                           <button
                             type="button"
-                            class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition"
+                            class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-[#20273a] dark:hover:text-white transition"
                             title="Cerrar vista previa"
                             (click)="closeNotifications()"
                           >
@@ -203,11 +203,13 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                       </div>
 
                       <!-- Selector de pestañas: Pedidos vs Solicitudes de Clientes -->
-                      <div class="mt-3 flex rounded-xl bg-slate-200/70 p-1 text-xs font-bold text-slate-600">
+                      <div class="mt-3 flex rounded-xl bg-slate-200/80 p-1 text-xs font-bold text-slate-600 dark:bg-[#1a202e] dark:text-slate-300">
                         <button
                           type="button"
-                          class="flex-1 rounded-lg py-1.5 text-center transition flex items-center justify-center gap-1.5"
-                          [class]="activeTab() === 'sales' ? 'bg-white text-slate-950 shadow-sm' : 'hover:text-slate-950'"
+                          class="notification-tab-btn flex-1 rounded-lg py-1.5 text-center flex items-center justify-center gap-1.5 font-bold cursor-pointer border-0 outline-none focus:outline-none focus:ring-0 select-none"
+                          [class]="activeTab() === 'sales'
+                            ? 'bg-white text-slate-900 shadow-xs dark:!bg-[#2a344d] dark:!text-white'
+                            : 'text-slate-600 hover:text-slate-900 dark:!text-slate-300 dark:hover:!text-white dark:hover:!bg-[#222a3d]'"
                           (click)="activeTab.set('sales')"
                         >
                           <span>Pedidos</span>
@@ -219,8 +221,10 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                         </button>
                         <button
                           type="button"
-                          class="flex-1 rounded-lg py-1.5 text-center transition flex items-center justify-center gap-1.5"
-                          [class]="activeTab() === 'customers' ? 'bg-white text-slate-950 shadow-sm' : 'hover:text-slate-950'"
+                          class="notification-tab-btn flex-1 rounded-lg py-1.5 text-center flex items-center justify-center gap-1.5 font-bold cursor-pointer border-0 outline-none focus:outline-none focus:ring-0 select-none"
+                          [class]="activeTab() === 'customers'
+                            ? 'bg-white text-slate-900 shadow-xs dark:!bg-[#2a344d] dark:!text-white'
+                            : 'text-slate-600 hover:text-slate-900 dark:!text-slate-300 dark:hover:!text-white dark:hover:!bg-[#222a3d]'"
                           (click)="activeTab.set('customers')"
                         >
                           <span>Clientes</span>
@@ -234,49 +238,49 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                     </div>
 
                     <!-- Lista de Ítems en Vista Previa -->
-                    <div class="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                    <div class="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-[#252c3f]">
                       @if (activeTab() === 'sales') {
                         @if (pendingSales().length === 0) {
                           <div class="px-5 py-8 text-center">
-                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
                               <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             </div>
-                            <p class="mt-2 text-xs font-bold text-slate-900">Todo al día</p>
-                            <p class="mt-0.5 text-[11px] text-slate-500">No hay ventas pendientes de confirmación.</p>
+                            <p class="mt-2 text-xs font-bold text-slate-900 dark:text-white">Todo al día</p>
+                            <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">No hay ventas pendientes de confirmación.</p>
                           </div>
                         } @else {
                           @for (sale of pendingSales(); track sale.id) {
                             <a
                               [routerLink]="['/ventas', sale.id]"
                               (click)="closeNotifications()"
-                              class="group block px-4 py-3 transition hover:bg-blue-50/60"
+                              class="group block px-4 py-3 transition hover:bg-blue-50/60 dark:hover:bg-[#1a2133]"
                             >
                               <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0 flex-1">
                                   <div class="flex items-center gap-2">
-                                    <span class="font-mono text-xs font-black text-slate-900 group-hover:text-blue-600">
+                                    <span class="font-mono text-xs font-black text-slate-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                                       {{ sale.saleNumber }}
                                     </span>
-                                    <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                    <span class="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 dark:bg-amber-950/50 dark:text-amber-300 dark:ring-amber-500/30">
                                       Pendiente
                                     </span>
                                   </div>
-                                  <p class="mt-1 truncate text-xs font-bold text-slate-800">
+                                  <p class="mt-1 truncate text-xs font-bold text-slate-800 dark:text-slate-200">
                                     {{ sale.customerName }}
                                   </p>
-                                  <div class="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+                                  <div class="mt-1 flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-400">
                                     <span>{{ sale.saleDate | date:'dd/MM/yyyy HH:mm' }}</span>
                                     <span>·</span>
                                     <span>{{ sale.lineCount }} {{ sale.lineCount === 1 ? 'ítem' : 'ítems' }}</span>
                                   </div>
                                 </div>
                                 <div class="text-right shrink-0">
-                                  <span class="text-xs font-black text-slate-950">
+                                  <span class="text-xs font-black text-slate-950 dark:text-white">
                                     {{ sale.total | currency:'COP' }}
                                   </span>
-                                  <span class="mt-2 block text-[11px] font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform">
+                                  <span class="mt-2 block text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform">
                                     Revisar →
                                   </span>
                                 </div>
@@ -287,36 +291,36 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                       } @else {
                         @if (pendingCustomerSignups().length === 0) {
                           <div class="px-5 py-8 text-center">
-                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                            <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
                               <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             </div>
-                            <p class="mt-2 text-xs font-bold text-slate-900">Sin solicitudes</p>
-                            <p class="mt-0.5 text-[11px] text-slate-500">No hay clientes esperando aprobación de cuenta.</p>
+                            <p class="mt-2 text-xs font-bold text-slate-900 dark:text-white">Sin solicitudes</p>
+                            <p class="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">No hay clientes esperando aprobación de cuenta.</p>
                           </div>
                         } @else {
                           @for (req of pendingCustomerSignups(); track req.id) {
                             <a
                               routerLink="/solicitudes"
                               (click)="closeNotifications()"
-                              class="group block px-4 py-3 transition hover:bg-blue-50/60"
+                              class="group block px-4 py-3 transition hover:bg-blue-50/60 dark:hover:bg-[#1a2133]"
                             >
                               <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0 flex-1">
                                   <div class="flex items-center gap-2">
-                                    <span class="text-xs font-black text-slate-900 group-hover:text-blue-600 truncate">
+                                    <span class="text-xs font-black text-slate-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400 truncate">
                                       {{ req.fullName }}
                                     </span>
                                   </div>
-                                  <p class="mt-0.5 text-[11px] text-slate-600 truncate">
+                                  <p class="mt-0.5 text-[11px] text-slate-600 dark:text-slate-300 truncate">
                                     Doc: {{ req.document }} · {{ req.email }}
                                   </p>
-                                  <span class="mt-1 block text-[10px] text-slate-400">
+                                  <span class="mt-1 block text-[10px] text-slate-400 dark:text-slate-400">
                                     Solicitud: {{ req.createdAt | date:'dd/MM/yyyy HH:mm' }}
                                   </span>
                                 </div>
-                                <span class="text-[11px] font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform shrink-0">
+                                <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 group-hover:translate-x-0.5 transition-transform shrink-0">
                                   Aprobar →
                                 </span>
                               </div>
@@ -327,13 +331,13 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                     </div>
 
                     <!-- Pie del Panel -->
-                    <div class="border-t border-slate-100 bg-slate-50/80 px-4 py-2.5 text-center">
+                    <div class="border-t border-slate-100 bg-slate-50/80 px-4 py-2.5 text-center dark:border-[#252c3f] dark:bg-[#161c2b]">
                       @if (activeTab() === 'sales') {
                         <a
                           routerLink="/ventas"
                           [queryParams]="{ status: 'Pending' }"
                           (click)="closeNotifications()"
-                          class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 transition"
+                          class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition"
                         >
                           <span>Ver todas las ventas pendientes</span>
                           <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -344,7 +348,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                         <a
                           routerLink="/solicitudes"
                           (click)="closeNotifications()"
-                          class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 transition"
+                          class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition"
                         >
                           <span>Gestionar solicitudes de clientes</span>
                           <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -377,7 +381,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
           <router-outlet />
         </main>
 
-        <footer class="border-t border-slate-200 bg-white px-5 py-6 text-center text-xs text-slate-500 lg:px-8">
+        <footer class="border-t border-slate-200 bg-white px-5 py-6 text-center text-xs text-slate-500 lg:px-8 dark:border-[#1d2433] dark:bg-[#0c1017] dark:text-slate-400">
           Firmeza · Gestión de productos y clientes
         </footer>
 

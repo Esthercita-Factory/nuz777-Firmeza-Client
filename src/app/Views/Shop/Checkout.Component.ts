@@ -9,6 +9,7 @@ import { ConfirmService } from '../../Services/confirm.service';
 import { ToastService } from '../../Services/imports.service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
 import { IconComponent } from '../Shared/Icon.Component';
+import Swal from 'sweetalert2';
 
 /**
  * Carrito y checkout.
@@ -140,14 +141,14 @@ import { IconComponent } from '../Shared/Icon.Component';
           </p>
 
           @if (isCustomerPending()) {
-            <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 flex items-start gap-3">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5 text-amber-600 shrink-0 mt-0.5">
+            <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 flex items-start gap-3 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-200">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
                 <circle cx="12" cy="12" r="10" />
                 <polyline points="12 6 12 12 16 14" />
               </svg>
               <div>
-                <p class="font-bold">Cuenta pendiente de aprobación</p>
-                <p class="mt-0.5 text-amber-800 leading-relaxed">
+                <p class="font-bold dark:text-amber-300">Cuenta pendiente de aprobación</p>
+                <p class="mt-0.5 text-amber-800 dark:text-amber-300/80 leading-relaxed">
                   Tu solicitud de cliente está siendo validada por la administración. Podrás enviar pedidos en cuanto sea aprobada.
                 </p>
               </div>
@@ -290,7 +291,13 @@ export class CheckoutComponent {
     if (this.saving() || this.cart.isEmpty()) return;
 
     if (this.isCustomerPending()) {
-      this.toastService.warning('Tu solicitud de cuenta de cliente aún está en revisión. No puedes realizar pedidos hasta que sea aprobada.');
+      void Swal.fire({
+        icon: 'info',
+        title: 'Cuenta pendiente de aprobación',
+        text: 'Tu solicitud de cuenta de cliente aún está en proceso de validación. Podrás realizar pedidos tan pronto sea aprobada por la administración.',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#2563eb'
+      });
       return;
     }
 
