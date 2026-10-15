@@ -117,6 +117,10 @@ export class ToastService {
     this.show('info', message);
   }
 
+  warning(message: string): void {
+    this.show('info', message);
+  }
+
   dismiss(id: number): void {
     this.items.update((current) => current.filter((toast) => toast.id !== id));
   }

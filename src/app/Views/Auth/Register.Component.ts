@@ -6,10 +6,11 @@ import { toApiError } from '../../Services/Api.Service';
 import { AuthService } from '../../Services/auth.service';
 import { ToastService } from '../../Services/imports.service';
 import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
+import { LogoComponent } from '../Layout/Shell.Component';
 
 @Component({
   selector: 'app-register',
-  imports: [FormsModule, RouterLink, ThemeToggleComponent],
+  imports: [FormsModule, RouterLink, ThemeToggleComponent, LogoComponent],
   template: `
     <div class="relative flex min-h-screen flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/50 px-4 py-8 text-slate-800 sm:px-6 lg:px-8">
       <!-- Malla de fondo sutil y orbes de iluminación suave -->
@@ -84,14 +85,14 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
       </header>
 
       <!-- Tarjeta central de registro -->
-      <main class="relative z-10 my-auto flex w-full justify-center py-6">
-        <div class="auth-card w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-8 text-slate-900 shadow-2xl shadow-slate-300/50 backdrop-blur-md sm:p-10">
+      <main class="relative z-10 my-auto flex w-full justify-center px-2 py-4 sm:px-0 sm:py-6">
+        <div class="auth-card w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 p-5 text-slate-900 shadow-2xl shadow-slate-300/50 backdrop-blur-md sm:rounded-3xl sm:p-10">
           <!-- Favicon / Logo de Firmeza -->
           <div class="text-center">
-            <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-2.5 shadow-md shadow-blue-500/10 ring-1 ring-slate-200">
-              <img src="img/favicon.png" alt="Firmeza" class="h-full w-full object-contain" />
+            <div class="inline-flex items-center justify-center">
+              <app-logo size="md" />
             </div>
-            <h1 class="mt-4 text-2xl font-black tracking-tight text-slate-950">Registro de cliente</h1>
+            <h1 class="mt-4 text-xl sm:text-2xl font-black tracking-tight text-slate-950">Registro de cliente</h1>
             <p class="mt-1 text-xs text-slate-500">Completa tus datos para solicitar acceso y comprar en Ferretería Firmeza</p>
           </div>
 

@@ -1,7 +1,8 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { toApiError } from '../../Services/Api.Service';
+import { AuthService } from '../../Services/auth.service';
 import { CartService } from '../../Services/cart.service';
 import { Sale, SalesService } from '../../Services/sales.service';
 import { ConfirmService } from '../../Services/confirm.service';
@@ -138,13 +139,28 @@ import { IconComponent } from '../Shared/Icon.Component';
             Los precios incluyen IVA. Al confirmar se genera el comprobante en PDF.
           </p>
 
+          @if (isCustomerPending()) {
+            <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 flex items-start gap-3">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5 text-amber-600 shrink-0 mt-0.5">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <div>
+                <p class="font-bold">Cuenta pendiente de aprobación</p>
+                <p class="mt-0.5 text-amber-800 leading-relaxed">
+                  Tu solicitud de cliente está siendo validada por la administración. Podrás enviar pedidos en cuanto sea aprobada.
+                </p>
+              </div>
+            </div>
+          }
+
           <button
             type="button"
             class="mt-5 w-full rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
-            [disabled]="saving()"
+            [disabled]="saving() || isCustomerPending()"
             (click)="confirmPurchase()"
           >
-            {{ saving() ? 'Procesando…' : 'Solicitar producto' }}
+            {{ saving() ? 'Procesando…' : isCustomerPending() ? 'Cuenta pendiente de aprobación' : 'Solicitar producto' }}
           </button>
 
           <button
@@ -166,6 +182,9 @@ export class CheckoutComponent {
   private readonly confirmService = inject(ConfirmService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
+  protected readonly authService = inject(AuthService, { optional: true });
+
+  protected readonly isCustomerPending = computed(() => this.authService?.isCustomerPending() ?? false);
 
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -269,6 +288,11 @@ export class CheckoutComponent {
 
   protected async confirmPurchase(): Promise<void> {
     if (this.saving() || this.cart.isEmpty()) return;
+
+    if (this.isCustomerPending()) {
+      this.toastService.warning('Tu solicitud de cuenta de cliente aún está en revisión. No puedes realizar pedidos hasta que sea aprobada.');
+      return;
+    }
 
     const confirmed = await this.confirmService.confirm({
       title: 'Solicitar productos',

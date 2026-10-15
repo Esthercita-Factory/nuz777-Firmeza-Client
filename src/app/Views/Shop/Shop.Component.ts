@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { toApiError } from '../../Services/Api.Service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
+import { AuthService } from '../../Services/auth.service';
 import { CartService } from '../../Services/cart.service';
 import { Product, ProductsService } from '../../Services/products.service';
 import { ToastService } from '../../Services/imports.service';
@@ -27,6 +28,31 @@ export interface CatalogProduct extends Product {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-8">
+      <!-- ALERTA DE CLIENTE PENDIENTE DE APROBACIÓN -->
+      @if (isCustomerPending()) {
+        <div class="relative overflow-hidden rounded-2xl border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-5 text-amber-900 shadow-sm backdrop-blur-sm">
+          <div class="flex items-start gap-3.5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/20">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-6 w-6">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="text-sm font-black text-amber-950">Tu solicitud de cuenta de cliente está en revisión</h3>
+                <span class="rounded-full bg-amber-200/80 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-900 border border-amber-300">
+                  Pendiente de aprobación
+                </span>
+              </div>
+              <p class="mt-1 text-xs text-amber-800 leading-relaxed">
+                ¡Gracias por registrarte en Ferretería Firmeza! Nuestro equipo administrativo está validando tus datos comerciales. Mientras tanto, puedes explorar el catálogo de materiales y precios. En cuanto tu solicitud sea aprobada, podrás armar pedidos y solicitar despachos a pie de obra.
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- HERO BANNER CON SKYLINE Y RESUMEN DEL PEDIDO -->
       <section class="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-6 sm:p-8 lg:p-10 text-white shadow-2xl shadow-slate-950/20">
         <!-- Malla arquitectónica en el banner -->
@@ -275,34 +301,27 @@ export interface CatalogProduct extends Product {
           @for (product of displayedProducts(); track product.id) {
             <article class="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1.5 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/10 will-change-transform">
               <div>
-                <!-- CABECERA VISUAL / FOTOGRAFÍA REAL DEL MATERIAL -->
-                <div class="relative flex h-64 w-full flex-col justify-between overflow-hidden rounded-2xl p-3 border border-slate-200/80 bg-slate-100 shadow-inner group/img">
-                  <!-- Imagen contextual real del producto según su tipo/material -->
-                  <img
-                    [src]="product.image"
-                    [alt]="product.name"
-                    loading="lazy"
-                    decoding="async"
-                    (error)="onImageError($event)"
-                    class="absolute inset-0 h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
-                  />
-
-                  <!-- Degradado de contraste para legibilidad de textos y chips sobre la fotografía -->
-                  <div class="pointer-events-none absolute inset-0 card-image-overlay product-card-overlay bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-slate-950/50"></div>
+                <!-- CABECERA VISUAL / ILUSTRACIÓN SVG DEL MATERIAL SEGÚN CATEGORÍA -->
+                <div
+                  class="relative flex h-52 w-full flex-col justify-between overflow-hidden rounded-2xl p-3 border border-slate-200/80 shadow-inner group/img transition-all duration-300"
+                  [class]="getCategoryGradient(product)"
+                >
+                  <!-- Patrón arquitectónico en el fondo del card -->
+                  <div class="pointer-events-none absolute inset-0 auth-grid opacity-20"></div>
 
                   <!-- Chips superiores: SKU y Disponibilidad -->
                   <div class="relative z-10 flex items-center justify-between gap-2">
-                    <span class="rounded-lg bg-white/95 px-2 py-0.5 font-mono text-[10px] font-black text-slate-800 shadow-sm border border-white/60">
+                    <span class="rounded-lg bg-black/40 backdrop-blur-md px-2.5 py-1 font-mono text-[10px] font-black text-white shadow-sm border border-white/10">
                       {{ product.sku }}
                     </span>
 
                     <span
-                      class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider shadow-sm text-white"
+                      class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm text-white backdrop-blur-md"
                       [class]="product.stock > 10
-                        ? 'bg-emerald-600/95 ring-1 ring-emerald-400/60'
+                        ? 'bg-emerald-600/90 border border-emerald-400/40'
                         : product.stock > 0
-                          ? 'bg-amber-600/95 ring-1 ring-amber-400/60'
-                          : 'bg-rose-600/95 ring-1 ring-rose-400/60'"
+                          ? 'bg-amber-600/90 border border-amber-400/40'
+                          : 'bg-rose-600/90 border border-rose-400/40'"
                     >
                       @if (product.stock > 0) {
                         <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span>
@@ -311,12 +330,110 @@ export interface CatalogProduct extends Product {
                     </span>
                   </div>
 
-                  <!-- Pie de la cabecera visual: Categoría y Unidad sobre la imagen -->
+                  <!-- ILUSTRACIÓN SVG CENTRAL DEL PRODUCTO -->
+                  <div class="relative z-10 flex flex-1 items-center justify-center p-2 text-white/90 transition-transform duration-300 ease-out group-hover:scale-110">
+                    @switch (getCategoryType(product)) {
+                      @case ('cemento') {
+                        <!-- Icono SVG Cemento / Concreto -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <rect x="14" y="16" width="36" height="42" rx="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.5" />
+                          <path d="M14 24h36M14 48h36" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2" />
+                          <circle cx="32" cy="36" r="8" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2" />
+                          <path d="M28 36h8M32 32v8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                          <path d="M22 16l4-8h16l4 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                      }
+                      @case ('acero') {
+                        <!-- Icono SVG Acero / Vigas / Varillas -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <path d="M12 16h40M12 48h40" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+                          <path d="M32 16v32" stroke="currentColor" stroke-width="6" stroke-linecap="round" />
+                          <path d="M20 22l24 20M44 22L20 42" stroke="currentColor" stroke-width="2" stroke-opacity="0.6" stroke-linecap="round" />
+                          <circle cx="16" cy="32" r="3" fill="currentColor" />
+                          <circle cx="48" cy="32" r="3" fill="currentColor" />
+                        </svg>
+                      }
+                      @case ('mamposteria') {
+                        <!-- Icono SVG Ladrillos / Mampostería -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <rect x="10" y="14" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                          <rect x="34" y="14" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                          <rect x="6" y="27" width="14" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                          <rect x="23" y="27" width="18" height="10" rx="1.5" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2" />
+                          <rect x="44" y="27" width="14" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                          <rect x="10" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                          <rect x="34" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                      }
+                      @case ('tuberia') {
+                        <!-- Icono SVG Tuberías / PVC / Válvulas -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <path d="M12 28h22c4.4 0 8 3.6 8 8v16" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+                          <path d="M12 24v8M46 52h-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                          <circle cx="24" cy="28" r="6" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2" />
+                          <path d="M24 16v6M20 16h8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                      }
+                      @case ('herramienta') {
+                        <!-- Icono SVG Herramientas (Martillo y Llave) -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <path d="M20 14h16l-3 8h-10l-3-8z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                          <path d="M26 22l18 26c1.1 1.6 3.3 2 4.9.9l1.2-.8c1.6-1.1 2-3.3.9-4.9L34 22" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                          <path d="M46 16a7 7 0 0 0-9 2l-18 26a3 3 0 0 0 4 4l18-26a7 7 0 0 0 5-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                      }
+                      @case ('acabados') {
+                        <!-- Icono SVG Pintura / Acabados -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <path d="M16 22l4 28a4 4 0 0 0 4 4h16a4 4 0 0 0 4-4l4-28H16z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                          <ellipse cx="32" cy="22" rx="16" ry="4" stroke="currentColor" stroke-width="2.5" />
+                          <path d="M24 22c0 8 16 8 16 0" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.3" />
+                          <path d="M12 20c0-9 9-14 20-14s20 5 20 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3" />
+                        </svg>
+                      }
+                      @case ('electrico') {
+                        <!-- Icono SVG Eléctrico / Energía -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <circle cx="32" cy="32" r="22" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2" />
+                          <path d="M36 12L22 34h12l-6 18 20-24H34l6-16z" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                        </svg>
+                      }
+                      @case ('agregados') {
+                        <!-- Icono SVG Agregados / Arena / Grava -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <path d="M10 48c6-14 14-26 22-26s16 12 22 26H10z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                          <circle cx="28" cy="38" r="2" fill="currentColor" />
+                          <circle cx="36" cy="36" r="2.5" fill="currentColor" />
+                          <circle cx="32" cy="44" r="2" fill="currentColor" />
+                          <path d="M6 52h52" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                      }
+                      @case ('madera') {
+                        <!-- Icono SVG Madera / Tableros -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <rect x="14" y="16" width="36" height="32" rx="3" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" />
+                          <path d="M22 16v32M32 16v32M42 16v32" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.5" />
+                          <path d="M14 26c6 3 12 0 18 3s12 0 18 3" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.7" />
+                        </svg>
+                      }
+                      @default {
+                        <!-- Icono SVG General / Planos y Construcción -->
+                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
+                          <rect x="12" y="14" width="40" height="36" rx="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.5" />
+                          <path d="M12 24h40M26 24v26" stroke="currentColor" stroke-width="2" stroke-opacity="0.6" />
+                          <circle cx="40" cy="37" r="6" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                          <path d="M37 37h6M40 34v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                      }
+                    }
+                  </div>
+
+                  <!-- Pie de la cabecera visual: Categoría y Unidad sobre el fondo -->
                   <div class="relative z-10 flex items-center justify-between text-[11px] font-bold text-white drop-shadow-sm">
-                    <span class="rounded-md bg-slate-950/80 px-2 py-0.5 border border-white/15">
+                    <span class="rounded-md bg-black/40 backdrop-blur-md px-2.5 py-0.5 border border-white/10">
                       {{ product.category }}
                     </span>
-                    <span class="rounded-md bg-slate-950/80 px-2 py-0.5 border border-white/15">
+                    <span class="rounded-md bg-black/40 backdrop-blur-md px-2.5 py-0.5 border border-white/10">
                       x {{ product.unit }}
                     </span>
                   </div>
@@ -438,24 +555,37 @@ export interface CatalogProduct extends Product {
               </div>
             </article>
           } @empty {
-            <div class="rounded-3xl border border-slate-200 bg-white/90 p-12 text-center shadow-sm sm:col-span-2 lg:col-span-3 xl:col-span-4">
-              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8">
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.3-4.3" />
-                </svg>
-              </div>
-              <h3 class="mt-4 text-base font-bold text-slate-800">No se encontraron productos</h3>
-              <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-                No hay materiales que coincidan con los criterios seleccionados. Prueba con otro término o limpia los filtros.
-              </p>
-              <button
-                type="button"
-                (click)="resetFilters()"
-                class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600"
-              >
-                Ver todos los productos
-              </button>
+            <div class="rounded-3xl border border-slate-200 bg-white/90 p-8 sm:p-12 text-center shadow-sm sm:col-span-2 lg:col-span-3 xl:col-span-4">
+              @if (isCustomerPending()) {
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 shadow-sm">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                </div>
+                <h3 class="mt-4 text-base font-bold text-slate-800">Solicitud en proceso de validación</h3>
+                <p class="mt-1.5 text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                  Tu solicitud de registro como cliente está siendo procesada por nuestro equipo administrativo. Tan pronto sea aceptada, se habilitará todo el catálogo y la posibilidad de cotizar y solicitar materiales.
+                </p>
+              } @else {
+                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                </div>
+                <h3 class="mt-4 text-base font-bold text-slate-800">No se encontraron productos</h3>
+                <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                  No hay materiales que coincidan con los criterios seleccionados. Prueba con otro término o limpia los filtros.
+                </p>
+                <button
+                  type="button"
+                  (click)="resetFilters()"
+                  class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600"
+                >
+                  Ver todos los productos
+                </button>
+              }
             </div>
           }
         </div>
@@ -508,6 +638,9 @@ export class ShopComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(AdminNotificationService);
   private readonly toastService = inject(ToastService);
   private readonly confirmService = inject(ConfirmService);
+  protected readonly authService = inject(AuthService, { optional: true });
+
+  protected readonly isCustomerPending = computed(() => this.authService?.isCustomerPending() ?? false);
 
   private static readonly CAPACITIES_KEY = 'firmeza_product_capacities';
   private static capacitiesCache: Record<string, number> | null = null;
@@ -580,6 +713,9 @@ export class ShopComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    if (this.authService?.isAuthenticated()) {
+      this.authService.me().subscribe({ error: () => {} });
+    }
     this.load();
     this.stockChangeSub = this.notificationService.stockOrSaleChanged$.subscribe(() => {
       // Recargar catálogo silenciosamente en tiempo real al confirmar ventas o actualizar stock
@@ -838,6 +974,81 @@ export class ShopComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLImageElement | null;
     if (target && !target.src.endsWith('img/products/general.jpg')) {
       target.src = 'img/products/general.jpg';
+    }
+  }
+
+  /**
+   * Resuelve el tipo semántico de categoría para renderizar el icono/ilustración SVG correspondiente.
+   */
+  protected getCategoryType(product: Product): string {
+    const cat = (product.category || '').toLowerCase();
+    if (cat.includes('cemento') || cat.includes('concreto') || cat.includes('mortero')) return 'cemento';
+    if (cat.includes('acero') || cat.includes('hierro') || cat.includes('varilla') || cat.includes('malla')) return 'acero';
+    if (cat.includes('ladrillo') || cat.includes('bloque') || cat.includes('mampost') || cat.includes('adoquin')) return 'mamposteria';
+    if (cat.includes('tub') || cat.includes('pvc') || cat.includes('fontan') || cat.includes('plomer')) return 'tuberia';
+    if (cat.includes('herramienta')) return 'herramienta';
+    if (cat.includes('pintur') || cat.includes('acabado') || cat.includes('esmalte')) return 'acabados';
+    if (cat.includes('electr')) return 'electrico';
+    if (cat.includes('arena') || cat.includes('agregado') || cat.includes('grava')) return 'agregados';
+    if (cat.includes('madera')) return 'madera';
+
+    const text = `${product.sku || ''} ${product.name || ''} ${product.description || ''}`.toLowerCase();
+    if (text.includes('cemento') || text.includes('concreto') || text.includes('mortero') || text.includes('cem-')) {
+      return 'cemento';
+    }
+    if (text.includes('acero') || text.includes('hierro') || text.includes('varilla') || text.includes('malla') || text.includes('viga') || text.includes('ace-')) {
+      return 'acero';
+    }
+    if (text.includes('ladrillo') || text.includes('bloque') || text.includes('adoquin') || text.includes('mampost') || text.includes('lad-') || text.includes('blo-')) {
+      return 'mamposteria';
+    }
+    if (text.includes('tub') || text.includes('pvc') || text.includes('fontaner') || text.includes('plomer') || text.includes('codo') || text.includes('valvula')) {
+      return 'tuberia';
+    }
+    if (text.includes('herramienta') || text.includes('pala') || text.includes('martillo') || text.includes('carretilla') || text.includes('llave') || text.includes('alicate') || text.includes('taladro') || text.includes('her-')) {
+      return 'herramienta';
+    }
+    if (text.includes('pintur') || text.includes('esmalte') || text.includes('estuco') || text.includes('yeso') || text.includes('ceramica') || text.includes('acabado') || text.includes('brocha') || text.includes('pin-')) {
+      return 'acabados';
+    }
+    if (text.includes('electr') || text.includes('cable') || text.includes('breaker') || text.includes('toma') || text.includes('interruptor') || text.includes('ele-')) {
+      return 'electrico';
+    }
+    if (text.includes('arena') || text.includes('agregado') || text.includes('grava') || text.includes('gravilla') || text.includes('triturado') || text.includes('are-')) {
+      return 'agregados';
+    }
+    if (text.includes('madera') || text.includes('tabla') || text.includes('liston') || text.includes('triplay') || text.includes('triplex') || text.includes('mad-')) {
+      return 'madera';
+    }
+    return 'general';
+  }
+
+  /**
+   * Asigna un degradado atmosférico con diseño industrial para la cabecera del material.
+   */
+  protected getCategoryGradient(product: Product): string {
+    const type = this.getCategoryType(product);
+    switch (type) {
+      case 'cemento':
+        return 'bg-gradient-to-br from-slate-800 via-zinc-800 to-slate-900 text-slate-200';
+      case 'acero':
+        return 'bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 text-sky-200';
+      case 'mamposteria':
+        return 'bg-gradient-to-br from-amber-950 via-orange-950 to-stone-900 text-amber-200';
+      case 'tuberia':
+        return 'bg-gradient-to-br from-cyan-950 via-sky-900 to-slate-900 text-cyan-200';
+      case 'herramienta':
+        return 'bg-gradient-to-br from-amber-950 via-stone-900 to-slate-900 text-amber-300';
+      case 'acabados':
+        return 'bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 text-purple-200';
+      case 'electrico':
+        return 'bg-gradient-to-br from-yellow-950 via-amber-950 to-slate-950 text-yellow-300';
+      case 'agregados':
+        return 'bg-gradient-to-br from-stone-800 via-amber-950 to-stone-900 text-amber-200';
+      case 'madera':
+        return 'bg-gradient-to-br from-amber-950 via-yellow-950 to-stone-900 text-amber-200';
+      default:
+        return 'bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-blue-200';
     }
   }
 

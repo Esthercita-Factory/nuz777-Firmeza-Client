@@ -148,7 +148,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
       </header>
 
       <!-- Contenedor central -->
-      <main class="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+      <main class="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-24 sm:pb-8">
         <router-outlet />
       </main>
 
@@ -165,6 +165,51 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
           </div>
         </div>
       </footer>
+
+      <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES EN EL PORTAL DE CLIENTES -->
+      <nav
+        class="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 py-1 shadow-2xl backdrop-blur-xl sm:hidden"
+        aria-label="Navegación móvil del cliente"
+      >
+        <a
+          routerLink="/tienda"
+          routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
+          class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5">
+            <rect width="7" height="7" x="3" y="3" rx="1" />
+            <rect width="7" height="7" x="14" y="3" rx="1" />
+            <rect width="7" height="7" x="14" y="14" rx="1" />
+            <rect width="7" height="7" x="3" y="14" rx="1" />
+          </svg>
+          <span>Catálogo</span>
+        </a>
+
+        <a
+          routerLink="/carrito"
+          routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
+          class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
+        >
+          <div class="relative flex items-center justify-center">
+            <app-icon name="cart" [size]="20" />
+            @if (cart.count() > 0) {
+              <span class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white shadow-xs">
+                {{ cart.count() }}
+              </span>
+            }
+          </div>
+          <span>Carrito</span>
+        </a>
+
+        <a
+          routerLink="/mis-compras"
+          routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
+          class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
+        >
+          <app-icon name="receipt" [size]="20" />
+          <span>Mis compras</span>
+        </a>
+      </nav>
     </div>
   `
 })

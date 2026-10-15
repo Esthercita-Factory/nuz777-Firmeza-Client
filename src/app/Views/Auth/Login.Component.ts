@@ -6,10 +6,11 @@ import { toApiError } from '../../Services/Api.Service';
 import { ADMINISTRATOR_ROLE, AuthService } from '../../Services/auth.service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
 import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
+import { LogoComponent } from '../Layout/Shell.Component';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule, RouterLink, ThemeToggleComponent],
+  imports: [FormsModule, RouterLink, ThemeToggleComponent, LogoComponent],
   template: `
     <div class="relative flex min-h-screen flex-col justify-between overflow-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/50 px-4 py-8 text-slate-800 sm:px-6 lg:px-8">
       <!-- Malla de fondo sutil y orbes de iluminación suave -->
@@ -86,12 +87,12 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
       </header>
 
       <!-- Tarjeta central de autenticación -->
-      <main class="relative z-10 my-auto flex w-full justify-center py-6">
-        <div class="auth-card w-full max-w-[450px] overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 p-8 text-slate-900 shadow-2xl shadow-slate-300/60 backdrop-blur-md sm:p-10">
-          <!-- Favicon / Logo institucional destacado -->
+      <main class="relative z-10 my-auto flex w-full justify-center px-2 py-4 sm:px-0 sm:py-6">
+        <div class="auth-card w-full max-w-[450px] overflow-hidden rounded-2xl sm:rounded-3xl border border-slate-200/90 bg-white/95 p-6 sm:p-8 md:p-10 text-slate-900 shadow-2xl shadow-slate-300/60 backdrop-blur-md">
+          <!-- Favicon / Logo institucional destacado en SVG -->
           <div class="text-center">
             <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-2.5 shadow-md shadow-blue-500/10 ring-1 ring-slate-200">
-              <img src="img/favicon.png" alt="Firmeza" class="h-full w-full object-contain" />
+              <app-logo size="md" />
             </div>
             <h1 class="mt-4 text-2xl font-black tracking-tight text-slate-950">Iniciar sesión</h1>
             <p class="mt-1 text-xs text-slate-500">Accede a la plataforma de Ferretería Firmeza</p>

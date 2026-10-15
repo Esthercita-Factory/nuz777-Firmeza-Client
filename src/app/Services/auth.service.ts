@@ -9,6 +9,7 @@ export interface UserSession {
   email: string;
   fullName: string;
   roles: string[];
+  customerStatus?: 'Pending' | 'Approved' | 'Rejected' | string;
 }
 
 export interface TokenResponse {
@@ -95,6 +96,25 @@ export class AuthService {
 
   isAdministrator(): boolean {
     return !!this.currentUser()?.roles.includes(ADMINISTRATOR_ROLE);
+  }
+
+  isCustomerPending(): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    if (this.isAdministrator()) return false;
+    return user.customerStatus === 'Pending';
+  }
+
+  isCustomerApproved(): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    if (this.isAdministrator()) return true;
+    return user.customerStatus === 'Approved';
+  }
+
+  updateCurrentUser(user: UserSession): void {
+    localStorage.setItem(this.userKey, JSON.stringify(user));
+    this.currentUser.set(user);
   }
 
   isAuthenticated(): boolean {

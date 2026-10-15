@@ -356,7 +356,12 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
               </div>
 
               <div class="flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm">
-                <img src="img/admin.png" alt="Admin" class="h-8 w-8 rounded-full object-cover" />
+                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
                 <span class="hidden text-sm font-bold text-slate-700 sm:block">{{ authService.getUser()?.fullName }}</span>
                 <span class="hidden rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-700 sm:block">Admin</span>
               </div>
@@ -371,13 +376,44 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
           </div>
         </header>
 
-        <main class="mx-auto w-full max-w-7xl flex-1 px-5 py-8 lg:px-8">
+        <main class="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 py-6 sm:py-8 lg:px-8 pb-24 lg:pb-8">
           <router-outlet />
         </main>
 
         <footer class="border-t border-slate-200 bg-white px-5 py-6 text-center text-xs text-slate-500 lg:px-8">
           Firmeza · Gestión de productos y clientes
         </footer>
+
+        <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES (BOTTOM NAV BAR) -->
+        <nav
+          class="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 py-1 shadow-2xl backdrop-blur-xl lg:hidden"
+          aria-label="Navegación móvil inferior"
+        >
+          @for (item of navItems; track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
+              class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
+            >
+              <div class="relative flex items-center justify-center">
+                <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                  <path [attr.d]="item.icon" />
+                </svg>
+                @if (item.path === '/ventas' && notificationService.pendingSaleCount() > 0) {
+                  <span class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-white shadow-xs">
+                    {{ notificationService.pendingSaleCount() }}
+                  </span>
+                }
+                @if (item.path === '/solicitudes' && pendingCustomerCount() > 0) {
+                  <span class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white shadow-xs">
+                    {{ pendingCustomerCount() }}
+                  </span>
+                }
+              </div>
+              <span class="truncate max-w-[56px] text-center leading-none">{{ item.label }}</span>
+            </a>
+          }
+        </nav>
       </div>
     </div>
   `

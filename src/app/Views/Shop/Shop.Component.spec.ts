@@ -5,6 +5,7 @@ import { ProductsService, Product } from '../../Services/products.service';
 import { CartService } from '../../Services/cart.service';
 import { ToastService } from '../../Services/imports.service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
+import { AuthService } from '../../Services/auth.service';
 import { provideRouter } from '@angular/router';
 
 describe('ShopComponent', () => {
@@ -41,11 +42,18 @@ describe('ShopComponent', () => {
         })
     };
 
+    const mockAuthService = {
+      isCustomerPending: () => false,
+      isAuthenticated: () => false,
+      me: () => of(null)
+    };
+
     await TestBed.configureTestingModule({
       imports: [ShopComponent],
       providers: [
         provideRouter([]),
         { provide: ProductsService, useValue: mockProductsService },
+        { provide: AuthService, useValue: mockAuthService },
         CartService,
         ToastService,
         AdminNotificationService
@@ -115,5 +123,35 @@ describe('ShopComponent', () => {
 
     component['onQuantityChange'](mockProduct, changeEvent);
     expect(cart.quantityOf('p1')).toBe(0);
+  });
+
+  it('resuelve correctamente los tipos de categorías y degradados para las ilustraciones SVG', () => {
+    expect(component['getCategoryType'](mockProduct)).toBe('cemento');
+    expect(component['getCategoryGradient'](mockProduct)).toContain('slate-800');
+
+    const tubo = {
+      ...mockProduct,
+      sku: 'TUB-001',
+      name: 'Tubo Sanitario PVC 2"',
+      category: 'Tuberías'
+    };
+    expect(component['getCategoryType'](tubo)).toBe('tuberia');
+    expect(component['getCategoryGradient'](tubo)).toContain('cyan-950');
+
+    const acero = {
+      ...mockProduct,
+      sku: 'ACE-001',
+      name: 'Varilla Corrugada 1/2"',
+      category: 'Aceros'
+    };
+    expect(component['getCategoryType'](acero)).toBe('acero');
+
+    const ladrillo = {
+      ...mockProduct,
+      sku: 'LAD-001',
+      name: 'Ladrillo Estructural',
+      category: 'Mampostería'
+    };
+    expect(component['getCategoryType'](ladrillo)).toBe('mamposteria');
   });
 });
