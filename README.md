@@ -7,7 +7,7 @@ Aplicación web cliente (Frontend SPA) desarrollada en **Angular** y **Tailwind 
 - npm >= 10
 - Docker (opcional, para ejecución contenerizada)
 
-## Desarrollo local
+## Desarrollo local.....
 
 ```bash
 # Instalar dependencias
