@@ -127,8 +127,10 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
             </div>
 
             <div class="ml-auto flex items-center gap-3">
-              <!-- Selector de Modo Oscuro / Claro -->
-              <app-theme-toggle size="sm" />
+              <!-- Selector de Modo Oscuro / Claro (escritorio) -->
+              <div class="hidden lg:block">
+                <app-theme-toggle size="sm" />
+              </div>
 
               <!-- Campanita con Menú de Vista Previa -->
               <div class="relative notification-dropdown-container">
@@ -159,7 +161,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                 <!-- Vista previa de Notificaciones (Dropdown Panel) -->
                 @if (notificationsOpen()) {
                   <div
-                    class="absolute right-0 top-full mt-2.5 w-84 sm:w-96 rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/15 z-50 overflow-hidden"
+                    class="absolute -right-20 sm:-right-28 lg:-right-36 top-full mt-2.5 w-80 sm:w-96 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200/90 bg-white shadow-2xl shadow-slate-900/15 z-50 overflow-hidden"
                     (click)="$event.stopPropagation()"
                   >
                     <!-- Cabecera del Panel -->
@@ -356,12 +358,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
               </div>
 
               <div class="flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm">
-                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-xs">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                  </svg>
-                </div>
+                <img src="img/admin.png" alt="Admin" class="h-8 w-8 rounded-full object-cover" />
                 <span class="hidden text-sm font-bold text-slate-700 sm:block">{{ authService.getUser()?.fullName }}</span>
                 <span class="hidden rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-700 sm:block">Admin</span>
               </div>
@@ -414,6 +411,11 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
             </a>
           }
         </nav>
+
+        <!-- Botón flotante de Modo Claro / Oscuro para móvil -->
+        <div class="lg:hidden">
+          <app-theme-toggle variant="fab" />
+        </div>
       </div>
     </div>
   `

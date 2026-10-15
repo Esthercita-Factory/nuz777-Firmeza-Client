@@ -78,7 +78,9 @@ import { LogoComponent } from '../Layout/Shell.Component';
         </a>
 
         <div class="flex items-center gap-3 text-xs font-semibold text-slate-600">
-          <app-theme-toggle size="sm" />
+          <div class="hidden sm:block">
+            <app-theme-toggle size="sm" />
+          </div>
           <span>¿No tienes cuenta?</span>
           <a routerLink="/register" class="font-bold text-blue-600 hover:text-blue-500 hover:underline">
             Solicitar registro →
@@ -299,6 +301,11 @@ import { LogoComponent } from '../Layout/Shell.Component';
           <span>Conexión cifrada TLS 1.3</span>
         </div>
       </footer>
+
+      <!-- Botón flotante de Modo Claro / Oscuro para móvil -->
+      <div class="sm:hidden">
+        <app-theme-toggle variant="fab" positionClass="bottom-5 right-5" />
+      </div>
     </div>
   `
 })

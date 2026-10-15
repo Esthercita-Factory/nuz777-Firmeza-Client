@@ -130,7 +130,9 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                 <span class="rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-black text-white">{{ cart.count() }}</span>
               }
             </a>
-            <app-theme-toggle size="sm" />
+            <div class="hidden sm:block">
+              <app-theme-toggle size="sm" />
+            </div>
             <button
               type="button"
               class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
@@ -210,6 +212,11 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
           <span>Mis compras</span>
         </a>
       </nav>
+
+      <!-- Botón flotante de Modo Claro / Oscuro para móvil -->
+      <div class="sm:hidden">
+        <app-theme-toggle variant="fab" />
+      </div>
     </div>
   `
 })
