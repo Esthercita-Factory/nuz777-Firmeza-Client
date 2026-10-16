@@ -37,6 +37,14 @@ export interface RegisterRequest {
   confirmPassword: string;
 }
 
+export interface CompleteProfileRequest {
+  document: string;
+  fullName?: string;
+  age: number;
+  phone: string;
+  address?: string | null;
+}
+
 export const ADMINISTRATOR_ROLE = 'Administrador';
 
 @Injectable({
@@ -62,6 +70,11 @@ export class AuthService {
     return this.http.post<TokenResponse>(`${API_URL}/auth/login`, credentials);
   }
 
+  loginWithExternal(provider: 'GitHub' = 'GitHub', mode: 'login' | 'register' = 'login'): void {
+    const returnUrl = encodeURIComponent(`${window.location.origin}/auth/callback`);
+    window.location.href = `${API_URL}/auth/external-login?provider=${provider}&mode=${mode}&returnUrl=${returnUrl}`;
+  }
+
   refresh(): Observable<TokenResponse> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
@@ -73,6 +86,14 @@ export class AuthService {
 
   me(): Observable<UserSession> {
     return this.http.get<UserSession>(`${API_URL}/auth/me`);
+  }
+
+  completeProfile(data: CompleteProfileRequest): Observable<UserSession> {
+    return this.http.post<UserSession>(`${API_URL}/auth/complete-profile`, data);
+  }
+
+  deleteMyAccount(): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/auth/me`);
   }
 
   saveSession(tokens: TokenResponse): void {
@@ -102,7 +123,14 @@ export class AuthService {
     const user = this.currentUser();
     if (!user) return false;
     if (this.isAdministrator()) return false;
-    return user.customerStatus === 'Pending';
+    return user.customerStatus === 'Pending' || user.customerStatus === 'RequiresProfile';
+  }
+
+  requiresProfileCompletion(): boolean {
+    const user = this.currentUser();
+    if (!user) return false;
+    if (this.isAdministrator()) return false;
+    return user.customerStatus === 'RequiresProfile';
   }
 
   isCustomerApproved(): boolean {
@@ -141,6 +169,9 @@ export class AuthService {
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.refreshTokenKey);
     localStorage.removeItem(this.userKey);
+    localStorage.removeItem('firmeza_product_capacities');
+    localStorage.removeItem('firmeza-draft-login');
+    localStorage.removeItem('firmeza-draft-register');
     sessionStorage.removeItem('admin_login_alert_shown');
     sessionStorage.removeItem('admin_last_seen_pending_sales');
     this.currentUser.set(null);

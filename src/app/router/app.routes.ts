@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { HomeComponent } from '../Views/Home/Home.Component';
 import { LoginComponent } from '../Views/Auth/Login.Component';
 import { RegisterComponent } from '../Views/Auth/Register.Component';
+import { AuthCallbackComponent } from '../Views/Auth/AuthCallback.Component';
 import { ShellComponent } from '../Views/Layout/Shell.Component';
 import { DashboardComponent } from '../Views/Dashboard/Dashboard.Component';
 import { ProductsComponent } from '../Views/Products/Products.Component';
@@ -26,6 +27,7 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'auth/callback', component: AuthCallbackComponent },
   { path: 'sin-acceso', component: AccessDeniedComponent },
   {
     path: '',

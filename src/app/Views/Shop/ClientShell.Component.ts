@@ -1,5 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import Swal from 'sweetalert2';
+import { toApiError } from '../../Services/Api.Service';
 import { AuthService } from '../../Services/auth.service';
 import { CartService } from '../../Services/cart.service';
 import { LogoComponent } from '../Layout/Shell.Component';
@@ -15,59 +17,9 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
   selector: 'app-client-shell',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, IconComponent, ThemeToggleComponent],
   template: `
-    <div class="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50/40 text-slate-800">
-      <!-- Malla de fondo arquitectónica y orbes de iluminación sutil -->
-      <div class="pointer-events-none fixed inset-0 auth-grid opacity-45 transform-gpu"></div>
-      <div class="pointer-events-none fixed -left-28 -top-28 h-96 w-96 rounded-full bg-blue-200/30 blur-3xl transform-gpu"></div>
-      <div class="pointer-events-none fixed -bottom-32 -right-28 h-96 w-96 rounded-full bg-sky-200/30 blur-3xl transform-gpu"></div>
-
-      <!-- Skyline de edificios corporativos en fondo -->
-      <svg
-        class="pointer-events-none fixed inset-x-0 bottom-0 z-0 h-64 w-full select-none opacity-40 transform-gpu"
-        viewBox="0 0 1200 300"
-        preserveAspectRatio="xMidYMax slice"
-        aria-hidden="true"
-      >
-        <defs>
-          <pattern id="ventanasClientShell" width="14" height="18" patternUnits="userSpaceOnUse">
-            <rect x="3" y="4" width="6" height="8" fill="#ffffff" opacity=".85" />
-          </pattern>
-          <g id="edificiosClientShell">
-            <rect x="0" y="140" width="90" height="160" />
-            <rect x="90" y="100" width="70" height="200" />
-            <rect x="160" y="170" width="100" height="130" />
-            <rect x="260" y="80" width="80" height="220" />
-            <rect x="340" y="150" width="110" height="150" />
-            <rect x="450" y="110" width="70" height="190" />
-            <rect x="520" y="60" width="90" height="240" />
-            <rect x="610" y="140" width="100" height="160" />
-            <rect x="710" y="90" width="80" height="210" />
-            <rect x="790" y="160" width="110" height="140" />
-            <rect x="900" y="70" width="80" height="230" />
-            <rect x="980" y="130" width="100" height="170" />
-            <rect x="1080" y="100" width="120" height="200" />
-          </g>
-          <clipPath id="recorteClientShell"><use href="#edificiosClientShell" /></clipPath>
-        </defs>
-
-        <use href="#edificiosClientShell" fill="#cbd5e1" opacity=".55" />
-        <rect width="1200" height="300" fill="url(#ventanasClientShell)" clip-path="url(#recorteClientShell)" opacity=".65" />
-
-        <g fill="#bfdbfe" opacity=".7">
-          <rect x="40" y="200" width="100" height="100" />
-          <rect x="140" y="170" width="70" height="130" />
-          <rect x="230" y="210" width="120" height="90" />
-          <rect x="380" y="180" width="80" height="120" />
-          <rect x="490" y="220" width="110" height="80" />
-          <rect x="640" y="190" width="90" height="110" />
-          <rect x="760" y="215" width="120" height="85" />
-          <rect x="910" y="185" width="80" height="115" />
-          <rect x="1020" y="210" width="110" height="90" />
-        </g>
-      </svg>
-
-      <!-- Barra superior con efecto glassmorphism -->
-      <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/85 backdrop-blur-md shadow-xs">
+    <div class="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-slate-50 text-slate-800">
+      <!-- Barra superior limpia y ligera (sin backdrop-blur pesado) -->
+      <header class="sticky top-0 z-30 border-b border-slate-200 bg-white">
         <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
           <a routerLink="/tienda" class="flex items-center gap-2.5 text-slate-950 transition hover:opacity-90">
             <app-logo size="sm" />
@@ -135,7 +87,17 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
             </div>
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+              [disabled]="deletingAccount()"
+              title="Eliminar mi cuenta y todos mis datos personales"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 cursor-pointer"
+              (click)="confirmDeleteAccount()"
+            >
+              <app-icon name="trash" [size]="14" />
+              <span class="hidden md:inline">{{ deletingAccount() ? 'Borrando...' : 'Borrar mis datos' }}</span>
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 cursor-pointer"
               (click)="logout()"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5 text-slate-400">
@@ -155,7 +117,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
       </main>
 
       <!-- Pie de página con seguridad y datos empresariales -->
-      <footer class="relative z-10 border-t border-slate-200/80 bg-white/80 backdrop-blur-md py-6 text-center text-xs text-slate-500">
+      <footer class="relative z-10 border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500">
         <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <p>© {{ year }} Firmeza · Materiales de Construcción y Ferretería. Todos los derechos reservados.</p>
           <div class="flex items-center gap-1.5 text-slate-500">
@@ -170,7 +132,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
 
       <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES EN EL PORTAL DE CLIENTES -->
       <nav
-        class="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 py-1 shadow-2xl backdrop-blur-xl sm:hidden"
+        class="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200 bg-white px-2 py-1 sm:hidden"
         aria-label="Navegación móvil del cliente"
       >
         <a
@@ -226,9 +188,58 @@ export class ClientShellComponent {
   private readonly router = inject(Router);
 
   protected readonly year = new Date().getFullYear();
+  protected readonly deletingAccount = signal(false);
 
   protected logout(): void {
     this.cart.clear();
-    this.authService.logout();
+    this.authService.logout(true);
+  }
+
+  protected confirmDeleteAccount(): void {
+    if (this.deletingAccount()) return;
+
+    void Swal.fire({
+      icon: 'warning',
+      title: '¿Borrar tu cuenta y todos tus datos?',
+      html: `
+        <p style="font-size: 14px; line-height: 1.5;">
+          Esta acción es <strong>definitiva e irreversible</strong>. Se eliminará tu usuario, tus solicitudes, tu historial de compras y toda tu información registrada en Firmeza.
+        </p>
+      `,
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Sí, borrar todos mis datos',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      this.deletingAccount.set(true);
+      this.authService.deleteMyAccount().subscribe({
+        next: () => {
+          this.deletingAccount.set(false);
+          this.cart.clear();
+          this.authService.logout(false);
+          void Swal.fire({
+            icon: 'success',
+            title: 'Usuario eliminado',
+            text: 'Tu cuenta y todos tus datos han sido borrados correctamente.',
+            timer: 2200,
+            showConfirmButton: false
+          }).then(() => {
+            this.router.navigate(['/login']);
+          });
+        },
+        error: (err) => {
+          this.deletingAccount.set(false);
+          void Swal.fire({
+            icon: 'error',
+            title: 'No se pudo eliminar',
+            text: toApiError(err).message || 'Ocurrió un problema al intentar borrar tu cuenta.'
+          });
+        }
+      });
+    });
   }
 }

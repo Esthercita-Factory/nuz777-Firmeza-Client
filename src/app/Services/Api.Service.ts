@@ -33,21 +33,37 @@ export function toApiError(error: unknown): ApiError {
   const status = (error as { status?: number })?.status ?? 0;
   const payload = (error as { error?: unknown })?.error;
   const fieldErrors: Record<string, string> = {};
+  const specificErrors: string[] = [];
 
   if (payload && typeof payload === 'object') {
     const errors = (payload as { errors?: Record<string, string[]> }).errors;
     for (const [field, messages] of Object.entries(errors ?? {})) {
       if (messages?.length) {
-        fieldErrors[field] = messages.join(' ');
+        const text = messages.join(' ');
+        fieldErrors[field] = text;
+        if (field.length > 0) {
+          fieldErrors[field.charAt(0).toLowerCase() + field.slice(1)] = text;
+          fieldErrors[field.toLowerCase()] = text;
+        }
+        specificErrors.push(text);
       }
     }
   }
 
-  const detail =
+  let detail =
     typeof payload === 'string' && payload.length > 0
       ? payload
       : (payload as { detail?: string; title?: string })?.detail ??
         (payload as { title?: string })?.title;
+
+  if (
+    specificErrors.length > 0 &&
+    (!detail ||
+      detail.toLowerCase().includes('uno o mas campos') ||
+      detail.toLowerCase().includes('solicitud invalida'))
+  ) {
+    detail = specificErrors.join('. ');
+  }
 
   return {
     status,
