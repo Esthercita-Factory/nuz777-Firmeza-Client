@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { toApiError } from '../../Services/Api.Service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
 import { ConfirmService } from '../../Services/confirm.service';
-import { ToastService } from '../../Services/imports.service';
+import { ImportsService, ToastService } from '../../Services/imports.service';
 import { SaleStatus, SaleSummary, SalesService } from '../../Services/sales.service';
 import { SaleDecisionService } from '../../Services/sale-decision.service';
 import { IconComponent } from '../Shared/Icon.Component';
@@ -106,12 +106,13 @@ import { IconComponent } from '../Shared/Icon.Component';
               Ver detalle
             </a>
             @if (sale.status === 'Delivered') {
-              <a
-                [href]="salesService.receiptUrl(sale.id)"
-                class="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 transition hover:border-emerald-500 hover:text-emerald-600"
+              <button
+                type="button"
+                (click)="previewReceipt(sale)"
+                class="rounded-xl border border-emerald-300 bg-emerald-50/50 px-4 py-2 text-xs font-bold text-emerald-800 transition hover:bg-emerald-100 cursor-pointer"
               >
-                Descargar comprobante
-              </a>
+                Ver comprobante
+              </button>
             }
             @if (sale.status === 'Pending') {
               <button
@@ -161,6 +162,7 @@ export class MyOrdersComponent implements OnInit, OnDestroy {
   private readonly notificationService = inject(AdminNotificationService);
   private readonly confirmService = inject(ConfirmService);
   private readonly toastService = inject(ToastService);
+  private readonly importsService = inject(ImportsService);
 
   private stockChangeSub?: Subscription;
 
@@ -224,6 +226,12 @@ export class MyOrdersComponent implements OnInit, OnDestroy {
         this.toastService.success('Solicitud cancelada.');
         this.load();
       },
+      error: (error) => this.toastService.error(toApiError(error).message)
+    });
+  }
+
+  protected previewReceipt(sale: SaleSummary): void {
+    this.importsService.preview(this.salesService.receiptUrl(sale.id, true)).subscribe({
       error: (error) => this.toastService.error(toApiError(error).message)
     });
   }

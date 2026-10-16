@@ -625,7 +625,6 @@ export class SaleFormComponent implements OnInit {
         this.clearDraft();
         AdminNotificationService.broadcastStockChanged(sale.saleNumber, sale.status);
         this.toastService.success(id ? `Venta ${sale.saleNumber} actualizada exitosamente.` : `Venta ${sale.saleNumber} registrada exitosamente.`);
-        this.importsService.download(this.salesService.receiptUrl(sale.id), `recibo_${sale.saleNumber}.pdf`).subscribe();
         this.router.navigate(['/ventas', sale.id]);
       },
       error: (error) => {

@@ -132,8 +132,8 @@ export class SalesService {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
 
-  receiptUrl(id: string): string {
-    return `${this.baseUrl}/${id}/receipt`;
+  receiptUrl(id: string, inline: boolean = false): string {
+    return `${this.baseUrl}/${id}/receipt${inline ? '?inline=true' : ''}`;
   }
 
   exportExcelUrl(): string {

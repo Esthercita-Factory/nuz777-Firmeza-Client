@@ -68,11 +68,20 @@ import { SkylineBackgroundComponent } from '../Shared/SkylineBackground.Componen
             }
             <button
               type="button"
-              class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-700"
-              (click)="downloadReceipt()"
+              class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-700 cursor-pointer"
+              (click)="previewReceipt()"
             >
               <app-icon name="receipt" [size]="14" />
-              Recibo PDF
+              Ver recibo PDF
+            </button>
+            <button
+              type="button"
+              class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 cursor-pointer"
+              (click)="downloadReceipt()"
+              title="Descargar archivo PDF"
+            >
+              <app-icon name="download" [size]="14" />
+              Descargar
             </button>
           </div>
         </div>
@@ -368,6 +377,15 @@ export class SaleDetailComponent implements OnInit {
         this.toastService.success('Venta eliminada.');
         this.router.navigate(['/ventas']);
       },
+      error: (error) => this.toastService.error(toApiError(error).message)
+    });
+  }
+
+  protected previewReceipt(): void {
+    const sale = this.sale();
+    if (!sale) return;
+
+    this.importsService.preview(this.salesService.receiptUrl(sale.id, true)).subscribe({
       error: (error) => this.toastService.error(toApiError(error).message)
     });
   }

@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable, from, of, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, from, of, switchMap, throwError } from 'rxjs';
 import { API_URL } from './Api.Service';
 
 export interface ImportValidationEntry {
@@ -40,6 +40,43 @@ export class ImportsService {
 
   templateUrl(): string {
     return `${this.baseUrl}/template`;
+  }
+
+  /**
+   * Visualiza un archivo (PDF, comprobante) en una nueva pestaña del navegador directamente
+   * sin forzar la descarga en disco.
+   */
+  preview(url: string): Observable<boolean> {
+    const win = window.open('about:blank', '_blank');
+    return this.http.get(url, { responseType: 'blob', observe: 'response' }).pipe(
+      switchMap((response) => {
+        const contentType = response.headers.get('content-type') ?? '';
+
+        if (contentType.includes('application/json') || contentType.includes('text/html') || contentType.startsWith('text/')) {
+          if (win) win.close();
+          return from(response.body?.text() ?? Promise.resolve('')).pipe(
+            switchMap((raw) => throwError(() => new Error(this.extractMessage(raw, response.status))))
+          );
+        }
+
+        if (response.body) {
+          const blob = new Blob([response.body], { type: 'application/pdf' });
+          const objectUrl = URL.createObjectURL(blob);
+          if (win) {
+            win.location.href = objectUrl;
+          } else {
+            window.open(objectUrl, '_blank');
+          }
+        } else if (win) {
+          win.close();
+        }
+        return of(true);
+      }),
+      catchError((err) => {
+        if (win) win.close();
+        return throwError(() => err);
+      })
+    );
   }
 
   /**

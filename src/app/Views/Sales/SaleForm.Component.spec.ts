@@ -79,8 +79,8 @@ describe('SaleFormComponent', () => {
 
     req.flush({ id: VENTA_ID, saleNumber: 'VTA-20261004-ABC123' });
 
-    // Al guardar, el componente baja el recibo PDF y navega al detalle.
-    httpMock.expectOne((r) => r.url.includes(`/sales/${VENTA_ID}/receipt`)).flush(new Blob());
+    // Al guardar, no se descarga automaticamente el recibo para no incomodar al usuario
+    httpMock.expectNone((r) => r.url.includes('/receipt'));
   });
 
   it('no envia si falta cliente o no hay lineas validas', () => {
@@ -191,7 +191,7 @@ describe('SaleFormComponent', () => {
       });
 
       req.flush(VENTA);
-      httpMock.expectOne((r) => r.url.includes(`/sales/${VENTA_ID}/receipt`)).flush(new Blob());
+      httpMock.expectNone((r) => r.url.includes('/receipt'));
     });
 
     it('bloquea la edicion si la venta ya fue entregada', async () => {

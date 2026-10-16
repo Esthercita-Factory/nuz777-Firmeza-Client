@@ -10,7 +10,6 @@ import { CartService } from '../../Services/cart.service';
 import { Product, ProductsService } from '../../Services/products.service';
 import { ToastService } from '../../Services/imports.service';
 import { ConfirmService } from '../../Services/confirm.service';
-import { IconComponent } from '../Shared/Icon.Component';
 import Swal from 'sweetalert2';
 
 export interface CatalogProduct extends Product {
@@ -19,165 +18,75 @@ export interface CatalogProduct extends Product {
 }
 
 /**
- * Catálogo profesional del portal del cliente con diseño arquitectónico,
- * fondo de edificios, búsqueda en tiempo real, filtros por categoría y control
- * interactivo del carrito de compras.
+ * Catálogo comercial moderno y profesional de Ferretería Firmeza.
+ * Enfoque prioritario en los productos, fotografía real de materiales,
+ * disponibilidad en tiempo real y flujo de compra ágil.
  */
 @Component({
   selector: 'app-shop',
-  imports: [FormsModule, RouterLink, CurrencyPipe, IconComponent],
+  imports: [FormsModule, RouterLink, CurrencyPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="space-y-8">
-      <!-- HERO BANNER CON SKYLINE Y RESUMEN DEL PEDIDO -->
-      <section class="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-6 sm:p-8 lg:p-10 text-white shadow-2xl shadow-slate-950/20">
-        <!-- Malla arquitectónica en el banner -->
-        <div class="pointer-events-none absolute inset-0 auth-grid opacity-25"></div>
-        <div class="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-blue-500/20 blur-3xl"></div>
-        <div class="pointer-events-none absolute -left-20 -bottom-20 h-80 w-80 rounded-full bg-sky-500/15 blur-3xl"></div>
-
-        <!-- Skyline vectorial decorativo de edificios dentro del banner -->
-        <svg
-          class="pointer-events-none absolute inset-x-0 bottom-0 h-40 w-full select-none opacity-20"
-          viewBox="0 0 1200 300"
-          preserveAspectRatio="xMidYMax slice"
-          aria-hidden="true"
-        >
-          <defs>
-            <pattern id="ventanasBanner" width="14" height="18" patternUnits="userSpaceOnUse">
-              <rect x="3" y="4" width="6" height="8" fill="#ffffff" opacity=".7" />
-            </pattern>
-            <g id="edificiosBanner">
-              <rect x="0" y="140" width="90" height="160" />
-              <rect x="90" y="100" width="70" height="200" />
-              <rect x="160" y="170" width="100" height="130" />
-              <rect x="260" y="80" width="80" height="220" />
-              <rect x="340" y="150" width="110" height="150" />
-              <rect x="450" y="110" width="70" height="190" />
-              <rect x="520" y="60" width="90" height="240" />
-              <rect x="610" y="140" width="100" height="160" />
-              <rect x="710" y="90" width="80" height="210" />
-              <rect x="790" y="160" width="110" height="140" />
-              <rect x="900" y="70" width="80" height="230" />
-              <rect x="980" y="130" width="100" height="170" />
-              <rect x="1080" y="100" width="120" height="200" />
-            </g>
-            <clipPath id="recorteBanner"><use href="#edificiosBanner" /></clipPath>
-          </defs>
-          <use href="#edificiosBanner" fill="#94a3b8" />
-          <rect width="1200" height="300" fill="url(#ventanasBanner)" clip-path="url(#recorteBanner)" />
-        </svg>
-
-        <div class="relative z-10 grid gap-8 lg:grid-cols-12 lg:items-center">
-          <div class="lg:col-span-8">
-            <div class="flex flex-wrap items-center gap-2">
-              <div class="inline-flex items-center gap-2 rounded-full border border-blue-400/30 bg-blue-500/10 px-3 py-1 text-xs font-black uppercase tracking-wider text-blue-300 backdrop-blur-md">
-                <span class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
-                Suministros certificados · Ferretería Firmeza
-              </div>
-
-              @if (authService?.requiresProfileCompletion()) {
-                <button
-                  type="button"
-                  (click)="showCompleteProfileModal()"
-                  class="inline-flex items-center gap-1.5 rounded-full border border-blue-400/40 bg-blue-500/15 px-3 py-1 text-xs font-bold text-blue-300 backdrop-blur-md hover:bg-blue-500/25 transition cursor-pointer"
-                  title="Completar datos de cliente"
-                >
-                  <span class="h-2 w-2 rounded-full bg-blue-400 animate-pulse"></span>
-                  Completar perfil · Requerido
-                </button>
-              } @else if (isCustomerPending()) {
-                <button
-                  type="button"
-                  (click)="showPendingSweetAlert()"
-                  class="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-300 backdrop-blur-md hover:bg-amber-500/25 transition cursor-pointer"
-                  title="Ver estado de tu solicitud de cuenta"
-                >
-                  <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
-                  Cuenta en revisión · Más información
-                </button>
-              }
-            </div>
-
-            <h1 class="mt-4 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white">
+    <div class="max-w-[1320px] mx-auto space-y-6 pb-12">
+      <!-- CABECERA PRINCIPAL: TÍTULO, ESTADO Y RESUMEN DEL CARRITO -->
+      <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-5">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
               Catálogo de Materiales
             </h1>
-
-            <p class="mt-3 max-w-2xl text-sm sm:text-base text-slate-300 leading-relaxed">
-              Consulta existencias en tiempo real, cotiza suministros para construcción o remodelación y realiza tus pedidos con precios directos con IVA incluido.
-            </p>
-
-            <!-- Sellos de confianza y servicio -->
-            <div class="mt-6 flex flex-wrap gap-4 text-xs font-semibold text-slate-300">
-              <div class="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 backdrop-blur-sm">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 text-emerald-400">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-                <span>Stock certificado en tiempo real</span>
-              </div>
-              <div class="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 backdrop-blur-sm">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 text-blue-400">
-                  <rect x="2" y="5" width="20" height="14" rx="2" />
-                  <line x1="2" y1="10" x2="22" y2="10" />
-                </svg>
-                <span>Precios con IVA del 19% desglosado</span>
-              </div>
-              <div class="flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 backdrop-blur-sm">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 text-amber-400">
-                  <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
-                  <path d="M15 18H9" />
-                  <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14v10" />
-                  <circle cx="17" cy="18" r="2" />
-                  <circle cx="7" cy="18" r="2" />
-                </svg>
-                <span>Despacho directo a pie de obra</span>
-              </div>
-            </div>
+            <span class="rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/70 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+              Stock en vivo
+            </span>
           </div>
-
-          <!-- TARJETA FLOTANTE DE RESUMEN DEL CARRITO -->
-          <div class="lg:col-span-4">
-            <div class="overflow-hidden rounded-2xl border border-white/15 bg-white/10 p-5 shadow-xl backdrop-blur-md">
-              <div class="flex items-center justify-between">
-                <span class="text-xs font-black uppercase tracking-wider text-slate-300">Tu compra actual</span>
-                <span class="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-xs font-bold text-blue-300 border border-blue-400/30">
-                  {{ cart.count() }} {{ cart.count() === 1 ? 'ítem' : 'ítems' }}
-                </span>
-              </div>
-
-              <div class="mt-4">
-                <p class="text-xs text-slate-400">Total acumulado estimado</p>
-                <p class="text-2xl font-black text-white tracking-tight">
-                  {{ cart.total() | currency: 'COP' }}
-                </p>
-                <div class="mt-1 flex items-center justify-between text-[11px] text-slate-300">
-                  <span>Base: {{ cart.subtotalBase() | currency: 'COP' }}</span>
-                  <span>IVA: {{ cart.iva() | currency: 'COP' }}</span>
-                </div>
-              </div>
-
-              <div class="mt-5 pt-4 border-t border-white/10">
-                <a
-                  routerLink="/carrito"
-                  class="group flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-xs font-black text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500 active:scale-98"
-                >
-                  <app-icon name="cart" [size]="15" />
-                  <span>Ver carrito y confirmar</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="h-3.5 w-3.5 transition-transform group-hover:translate-x-1">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-          </div>
+          <p class="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Suministros certificados para construcción y remodelación con IVA del 19% incluido.
+          </p>
         </div>
-      </section>
 
-      <!-- BARRA DE BÚSQUEDA Y FILTRADO AVANZADO -->
-      <section class="rounded-3xl border border-slate-200/90 bg-white/95 p-5 shadow-sm space-y-4">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <!-- Input de búsqueda -->
+        <div class="flex items-center gap-3">
+          @if (authService?.requiresProfileCompletion()) {
+            <button
+              type="button"
+              (click)="showCompleteProfileModal()"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-blue-300 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/50 px-3.5 py-2 text-xs font-bold text-[#1F5BFF] dark:text-blue-300 hover:bg-blue-100 transition cursor-pointer"
+            >
+              <span class="h-2 w-2 rounded-full bg-[#1F5BFF] animate-pulse"></span>
+              Completar perfil comercial
+            </button>
+          } @else if (isCustomerPending()) {
+            <button
+              type="button"
+              (click)="showPendingSweetAlert()"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 dark:border-amber-800/60 dark:bg-amber-950/40 px-3.5 py-2 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition cursor-pointer"
+            >
+              <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+              Cuenta en revisión
+            </button>
+          }
+
+          <!-- Pastilla de acceso rápido al Carrito -->
+          <a
+            routerLink="/carrito"
+            class="inline-flex items-center gap-2.5 rounded-xl bg-slate-900 dark:bg-white px-4 py-2 text-xs font-bold text-white dark:text-slate-900 shadow-sm transition hover:bg-[#1F5BFF] dark:hover:bg-blue-50 hover:shadow active:scale-98"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+              <circle cx="8" cy="21" r="1" />
+              <circle cx="19" cy="21" r="1" />
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+            </svg>
+            <span>{{ cart.count() }} {{ cart.count() === 1 ? 'ítem' : 'ítems' }}</span>
+            <span class="opacity-50">·</span>
+            <span class="font-extrabold">{{ cart.total() | currency: 'COP' }}</span>
+          </a>
+        </div>
+      </header>
+
+      <!-- BARRA DE BÚSQUEDA Y FILTRADO INTEGRADO -->
+      <section class="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 shadow-xs space-y-4">
+        <!-- Fila superior: Input de búsqueda + Filtros rápidos -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+          <!-- Input de búsqueda con debounce -->
           <form class="relative flex-1" (ngSubmit)="search()">
             <span class="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
@@ -189,15 +98,15 @@ export interface CatalogProduct extends Product {
               name="q"
               [ngModel]="queryText"
               (ngModelChange)="onQueryTextChange($event)"
-              placeholder="Buscar por código SKU, nombre o especificación (ej.: CEM-001, Cemento, Tubo)..."
-              class="w-full rounded-2xl border border-slate-300 bg-slate-50/60 py-3 pl-10 pr-24 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100"
+              placeholder="Buscar por código SKU, nombre o material (ej. CEM-001, Cemento, Varilla, Tubo)..."
+              class="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 py-2.5 pl-10 pr-24 text-sm font-medium text-slate-900 dark:text-white outline-none transition placeholder:text-slate-400 focus:border-[#1F5BFF] focus:bg-white dark:focus:bg-slate-900 focus:ring-3 focus:ring-blue-100 dark:focus:ring-blue-900/40"
             />
-            <div class="absolute inset-y-1.5 right-1.5 flex items-center gap-1">
+            <div class="absolute inset-y-1 right-1 flex items-center gap-1">
               @if (queryText) {
                 <button
                   type="button"
                   (click)="clearSearch()"
-                  class="rounded-xl px-2 py-1.5 text-xs font-bold text-slate-400 hover:text-slate-700"
+                  class="rounded-lg px-2 py-1 text-xs font-bold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                   title="Limpiar búsqueda"
                 >
                   ✕
@@ -205,33 +114,34 @@ export interface CatalogProduct extends Product {
               }
               <button
                 type="submit"
-                class="rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600"
+                class="rounded-lg bg-slate-900 dark:bg-slate-700 hover:bg-[#1F5BFF] dark:hover:bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white transition cursor-pointer"
               >
                 Buscar
               </button>
             </div>
           </form>
 
-          <!-- Filtros rápidos: Solo stock y Ordenar -->
-          <div class="flex flex-wrap items-center gap-3">
+          <!-- Filtros de disponibilidad y orden -->
+          <div class="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               (click)="toggleOnlyInStock()"
-              class="flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs font-bold transition shadow-2xs"
-              [class]="onlyInStock() ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'"
+              class="flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-bold transition cursor-pointer"
+              [class]="onlyInStock()
+                ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300'
+                : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'"
             >
-              <span class="h-2 w-2 rounded-full" [class]="onlyInStock() ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+              <span class="h-2 w-2 rounded-full" [class]="onlyInStock() ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'"></span>
               Solo con stock
             </button>
 
-            <!-- Selector de ordenamiento -->
             <div class="relative flex items-center">
               <select
                 [ngModel]="sortBy()"
                 (ngModelChange)="onSortChange($event)"
-                class="rounded-xl border border-slate-300 bg-white py-2.5 pl-3 pr-8 text-xs font-bold text-slate-700 shadow-2xs outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2 pl-3 pr-8 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none transition focus:border-blue-400 cursor-pointer"
               >
-                <option value="default">Relevancia</option>
+                <option value="default">Ordenar: Relevancia</option>
                 <option value="price-asc">Menor precio</option>
                 <option value="price-desc">Mayor precio</option>
                 <option value="stock-desc">Mayor stock</option>
@@ -241,17 +151,19 @@ export interface CatalogProduct extends Product {
           </div>
         </div>
 
-        <!-- PASTILLAS DE CATEGORÍAS -->
-        <div class="border-t border-slate-100 pt-3 flex flex-wrap items-center gap-2">
-          <span class="text-[11px] font-black uppercase tracking-wider text-slate-400 mr-1">Categorías:</span>
+        <!-- Fila inferior: Pastillas de categorías con scroll suave -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pt-1 pb-0.5 no-scrollbar">
+          <span class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 shrink-0">
+            Categorías:
+          </span>
           @for (cat of categories(); track cat) {
             <button
               type="button"
               (click)="onCategorySelect(cat)"
-              class="rounded-xl px-3.5 py-1.5 text-xs font-bold transition"
+              class="rounded-xl px-3 py-1.5 text-xs font-bold transition shrink-0 cursor-pointer"
               [class]="selectedCategory() === cat
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-1 ring-blue-600'
-                : 'border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-white hover:text-slate-900'"
+                ? 'bg-[#1F5BFF] text-white shadow-xs'
+                : 'border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:border-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'"
             >
               {{ categoryLabel(cat) }}
             </button>
@@ -261,223 +173,126 @@ export interface CatalogProduct extends Product {
             <button
               type="button"
               (click)="resetFilters()"
-              class="ml-auto text-xs font-bold text-rose-600 hover:text-rose-700 hover:underline"
+              class="rounded-xl border border-rose-200 bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/40 px-3 py-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-100 transition shrink-0 cursor-pointer ml-auto"
             >
-              Restablecer filtros
+              Limpiar filtros
             </button>
           }
         </div>
       </section>
 
-      <!-- MENSAJE DE ERROR -->
-      @if (errorMessage(); as message) {
-        <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800 shadow-sm" role="alert">
-          {{ message }}
+      <!-- FEEDBACK DE ERROR O CARGA -->
+      @if (errorMessage()) {
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300">
+          {{ errorMessage() }}
         </div>
       }
 
-      <!-- ESTADO DE CARGA (SKELETONS PULSANTES) -->
       @if (loading()) {
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          @for (skeleton of [1,2,3,4,5,6,7,8]; track skeleton) {
-            <div class="animate-pulse rounded-3xl border border-slate-200/80 bg-white/80 p-5 shadow-sm space-y-4">
-              <div class="h-64 rounded-2xl bg-slate-200/80"></div>
-              <div class="h-4 w-3/4 rounded-md bg-slate-200/80"></div>
-              <div class="h-3 w-1/2 rounded-md bg-slate-200/60"></div>
-              <div class="space-y-2 pt-2">
-                <div class="h-3 w-full rounded-md bg-slate-200/50"></div>
-                <div class="h-3 w-5/6 rounded-md bg-slate-200/50"></div>
-              </div>
-              <div class="pt-4 flex items-center justify-between">
-                <div class="h-6 w-24 rounded-md bg-slate-200/80"></div>
-                <div class="h-9 w-28 rounded-xl bg-slate-200/80"></div>
+        <!-- Skeleton loader limpio -->
+        <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+          @for (_ of [1, 2, 3, 4, 5, 6, 7, 8]; track _) {
+            <div class="animate-pulse rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 sm:p-4 space-y-2.5 sm:space-y-3">
+              <div class="h-32 sm:h-48 w-full rounded-xl bg-slate-100 dark:bg-slate-800"></div>
+              <div class="h-3.5 sm:h-4 w-3/4 rounded bg-slate-100 dark:bg-slate-800"></div>
+              <div class="h-2.5 sm:h-3 w-1/2 rounded bg-slate-100 dark:bg-slate-800"></div>
+              <div class="pt-1.5 sm:pt-2 flex justify-between items-center">
+                <div class="h-5 sm:h-6 w-16 sm:w-24 rounded bg-slate-100 dark:bg-slate-800"></div>
+                <div class="h-8 sm:h-9 w-14 sm:w-24 rounded-xl bg-slate-100 dark:bg-slate-800"></div>
               </div>
             </div>
           }
         </div>
       } @else {
-        <!-- REJILLA DE PRODUCTOS DEL CATÁLOGO -->
-        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <!-- REJILLA PRINCIPAL DE PRODUCTOS (2x2 EN MÓVIL, RESPONSIVE) -->
+        <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
           @for (product of displayedProducts(); track product.id) {
-            <article class="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-5 shadow-sm transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-1.5 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-500/10 will-change-transform">
+            <article class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 sm:p-4 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-blue-400/70 hover:shadow-xl hover:shadow-blue-500/10">
               <div>
-                <!-- CABECERA VISUAL / ILUSTRACIÓN SVG DEL MATERIAL SEGÚN CATEGORÍA -->
-                <div
-                  class="relative flex h-52 w-full flex-col justify-between overflow-hidden rounded-2xl p-3 border border-slate-200/80 shadow-inner group/img transition-all duration-300"
-                  [class]="getCategoryGradient(product)"
-                >
-                  <!-- Patrón arquitectónico en el fondo del card -->
-                  <div class="pointer-events-none absolute inset-0 auth-grid opacity-20"></div>
+                <!-- Cabecera de la tarjeta: Categoría y SKU -->
+                <div class="flex items-center justify-between gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-2">
+                  <span class="truncate rounded bg-slate-100 dark:bg-slate-800 px-1.5 sm:px-2 py-0.5 font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 max-w-[85px] sm:max-w-none">
+                    {{ product.category }}
+                  </span>
+                  <span class="font-mono text-[9px] sm:text-[11px] text-slate-400 dark:text-slate-500 shrink-0">
+                    {{ product.sku }}
+                  </span>
+                </div>
 
-                  <!-- Chips superiores: SKU y Disponibilidad -->
-                  <div class="relative z-10 flex items-center justify-between gap-2">
-                    <span class="rounded-lg bg-black/40 backdrop-blur-md px-2.5 py-1 font-mono text-[10px] font-black text-white shadow-sm border border-white/10">
-                      {{ product.sku }}
-                    </span>
+                <!-- CONTENEDOR DE FOTOGRAFÍA REAL DEL MATERIAL -->
+                <div class="relative h-32 sm:h-48 w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center group/img">
+                  <img
+                    [src]="product.image"
+                    [alt]="product.name"
+                    (error)="onImageError($event)"
+                    loading="lazy"
+                    class="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                  />
 
+                  <!-- Badge de disponibilidad en esquina superior derecha -->
+                  <div class="absolute top-1.5 right-1.5 sm:top-2.5 sm:right-2.5 z-10">
                     <span
-                      class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider shadow-sm text-white backdrop-blur-md"
+                      class="inline-flex items-center gap-1 sm:gap-1.5 rounded-full px-1.5 sm:px-2.5 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider shadow-sm text-white backdrop-blur-md"
                       [class]="product.stock > 10
-                        ? 'bg-emerald-600/90 border border-emerald-400/40'
+                        ? 'bg-emerald-600/90'
                         : product.stock > 0
-                          ? 'bg-amber-600/90 border border-amber-400/40'
-                          : 'bg-rose-600/90 border border-rose-400/40'"
+                          ? 'bg-amber-600/90'
+                          : 'bg-rose-600/90'"
                     >
                       @if (product.stock > 0) {
-                        <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span>
+                        <span class="h-1 w-1 sm:h-1.5 sm:w-1.5 rounded-full bg-white animate-pulse"></span>
                       }
-                      {{ product.stock > 10 ? 'En stock' : product.stock > 0 ? 'Últimas ' + product.stock : 'Agotado' }}
+                      {{ product.stock > 10 ? 'En stock' : product.stock > 0 ? (product.stock <= 5 ? 'Últimas ' + product.stock : product.stock + ' disp.') : 'Agotado' }}
                     </span>
                   </div>
 
-                  <!-- ILUSTRACIÓN SVG CENTRAL DEL PRODUCTO -->
-                  <div class="relative z-10 flex flex-1 items-center justify-center p-2 text-white/90 transition-transform duration-300 ease-out group-hover:scale-110">
-                    @switch (getCategoryType(product)) {
-                      @case ('cemento') {
-                        <!-- Icono SVG Cemento / Concreto -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <rect x="14" y="16" width="36" height="42" rx="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.5" />
-                          <path d="M14 24h36M14 48h36" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2" />
-                          <circle cx="32" cy="36" r="8" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2" />
-                          <path d="M28 36h8M32 32v8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-                          <path d="M22 16l4-8h16l4 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                      }
-                      @case ('acero') {
-                        <!-- Icono SVG Acero / Vigas / Varillas -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <path d="M12 16h40M12 48h40" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
-                          <path d="M32 16v32" stroke="currentColor" stroke-width="6" stroke-linecap="round" />
-                          <path d="M20 22l24 20M44 22L20 42" stroke="currentColor" stroke-width="2" stroke-opacity="0.6" stroke-linecap="round" />
-                          <circle cx="16" cy="32" r="3" fill="currentColor" />
-                          <circle cx="48" cy="32" r="3" fill="currentColor" />
-                        </svg>
-                      }
-                      @case ('mamposteria') {
-                        <!-- Icono SVG Ladrillos / Mampostería -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <rect x="10" y="14" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                          <rect x="34" y="14" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                          <rect x="6" y="27" width="14" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                          <rect x="23" y="27" width="18" height="10" rx="1.5" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2" />
-                          <rect x="44" y="27" width="14" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                          <rect x="10" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                          <rect x="34" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                        </svg>
-                      }
-                      @case ('tuberia') {
-                        <!-- Icono SVG Tuberías / PVC / Válvulas -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <path d="M12 28h22c4.4 0 8 3.6 8 8v16" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
-                          <path d="M12 24v8M46 52h-8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                          <circle cx="24" cy="28" r="6" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2" />
-                          <path d="M24 16v6M20 16h8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                        </svg>
-                      }
-                      @case ('herramienta') {
-                        <!-- Icono SVG Herramientas (Martillo y Llave) -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <path d="M20 14h16l-3 8h-10l-3-8z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
-                          <path d="M26 22l18 26c1.1 1.6 3.3 2 4.9.9l1.2-.8c1.6-1.1 2-3.3.9-4.9L34 22" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
-                          <path d="M46 16a7 7 0 0 0-9 2l-18 26a3 3 0 0 0 4 4l18-26a7 7 0 0 0 5-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                      }
-                      @case ('acabados') {
-                        <!-- Icono SVG Pintura / Acabados -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <path d="M16 22l4 28a4 4 0 0 0 4 4h16a4 4 0 0 0 4-4l4-28H16z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
-                          <ellipse cx="32" cy="22" rx="16" ry="4" stroke="currentColor" stroke-width="2.5" />
-                          <path d="M24 22c0 8 16 8 16 0" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.3" />
-                          <path d="M12 20c0-9 9-14 20-14s20 5 20 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3" />
-                        </svg>
-                      }
-                      @case ('electrico') {
-                        <!-- Icono SVG Eléctrico / Energía -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <circle cx="32" cy="32" r="22" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2" />
-                          <path d="M36 12L22 34h12l-6 18 20-24H34l6-16z" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
-                        </svg>
-                      }
-                      @case ('agregados') {
-                        <!-- Icono SVG Agregados / Arena / Grava -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <path d="M10 48c6-14 14-26 22-26s16 12 22 26H10z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
-                          <circle cx="28" cy="38" r="2" fill="currentColor" />
-                          <circle cx="36" cy="36" r="2.5" fill="currentColor" />
-                          <circle cx="32" cy="44" r="2" fill="currentColor" />
-                          <path d="M6 52h52" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
-                        </svg>
-                      }
-                      @case ('madera') {
-                        <!-- Icono SVG Madera / Tableros -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <rect x="14" y="16" width="36" height="32" rx="3" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" />
-                          <path d="M22 16v32M32 16v32M42 16v32" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.5" />
-                          <path d="M14 26c6 3 12 0 18 3s12 0 18 3" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.7" />
-                        </svg>
-                      }
-                      @default {
-                        <!-- Icono SVG General / Planos y Construcción -->
-                        <svg viewBox="0 0 64 64" fill="none" class="h-24 w-24 drop-shadow-lg">
-                          <rect x="12" y="14" width="40" height="36" rx="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.5" />
-                          <path d="M12 24h40M26 24v26" stroke="currentColor" stroke-width="2" stroke-opacity="0.6" />
-                          <circle cx="40" cy="37" r="6" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                          <path d="M37 37h6M40 34v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                      }
-                    }
-                  </div>
-
-                  <!-- Pie de la cabecera visual: Categoría y Unidad sobre el fondo -->
-                  <div class="relative z-10 flex items-center justify-between text-[11px] font-bold text-white drop-shadow-sm">
-                    <span class="rounded-md bg-black/40 backdrop-blur-md px-2.5 py-0.5 border border-white/10">
-                      {{ product.category }}
-                    </span>
-                    <span class="rounded-md bg-black/40 backdrop-blur-md px-2.5 py-0.5 border border-white/10">
+                  <!-- Unidad en esquina inferior izquierda -->
+                  <div class="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 z-10">
+                    <span class="rounded bg-black/60 backdrop-blur-md px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-white">
                       x {{ product.unit }}
                     </span>
                   </div>
                 </div>
 
                 <!-- DATOS DEL MATERIAL -->
-                <div class="mt-4">
-                  <h3 class="text-base font-black text-slate-950 transition-colors group-hover:text-blue-600 line-clamp-2">
+                <div class="mt-2.5 sm:mt-3.5">
+                  <h3 class="text-xs sm:text-base font-bold text-slate-900 dark:text-white leading-tight sm:leading-snug line-clamp-2 group-hover:text-[#1F5BFF] transition-colors" [title]="product.name">
                     {{ product.name }}
                   </h3>
 
                   @if (product.description) {
-                    <p class="mt-1.5 text-xs text-slate-500 leading-relaxed line-clamp-2">
+                    <p class="mt-1 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-1 sm:line-clamp-2 leading-relaxed">
                       {{ product.description }}
                     </p>
                   } @else {
-                    <p class="mt-1.5 text-xs text-slate-400 italic">
-                      Material certificado para uso industrial y residencial.
+                    <p class="mt-1 text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 italic line-clamp-1 sm:line-clamp-2">
+                      Material certificado de alta calidad para obra civil.
                     </p>
                   }
                 </div>
               </div>
 
-              <!-- SECCIÓN INFERIOR: PRECIO, BARRA DE STOCK Y ACCIÓN DE COMPRA -->
-              <div class="mt-5 pt-4 border-t border-slate-100">
-                <div class="flex items-baseline justify-between">
+              <!-- PIE DE TARJETA: PRECIO, BARRA DE DISPONIBILIDAD Y ACCIÓN -->
+              <div class="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800">
+                <div class="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-0.5 sm:gap-2 mb-2">
                   <div>
-                    <p class="text-xs font-semibold text-slate-400">Precio unitario</p>
-                    <p class="text-xl font-black text-slate-950 tracking-tight">
+                    <span class="text-base sm:text-xl font-black text-slate-950 dark:text-white tracking-tight">
                       {{ product.price | currency: 'COP' }}
-                    </p>
+                    </span>
                   </div>
-                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span class="w-fit text-[9px] sm:text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/80">
                     IVA 19% inc.
                   </span>
                 </div>
 
-                <!-- Barra de disponibilidad de inventario -->
-                <div class="mt-2.5">
-                  <div class="flex items-center justify-between text-[10px] font-semibold text-slate-400 mb-1">
-                    <span>Disponibilidad</span>
-                    <span class="font-bold text-slate-600">{{ product.stock }} {{ product.unit }}s</span>
+                <!-- Barra de existencias -->
+                <div class="mb-2.5 sm:mb-3">
+                  <div class="flex items-center justify-between text-[9px] sm:text-[10px] font-semibold text-slate-400 dark:text-slate-500 mb-1">
+                    <span class="hidden sm:inline">Disponibilidad</span>
+                    <span class="sm:hidden">Stock</span>
+                    <span class="font-bold text-slate-700 dark:text-slate-300">{{ product.stock }} {{ product.unit }}s</span>
                   </div>
-                  <div class="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                  <div class="h-1.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <div
                       class="h-full rounded-full transition-all duration-300"
                       [class]="product.stock > 10 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-rose-500'"
@@ -487,21 +302,21 @@ export interface CatalogProduct extends Product {
                 </div>
 
                 <!-- ACCIONES DE COMPRA -->
-                <div class="mt-4">
+                <div>
                   @if (cart.quantityOf(product.id) > 0) {
-                    <!-- Control interactivo: en carrito con stepper y tipeo numérico directo -->
-                    <div class="flex items-center justify-between gap-1.5 rounded-xl border border-blue-200 bg-blue-50/70 p-1.5 shadow-2xs">
+                    <!-- Stepper interactivo dentro del carrito -->
+                    <div class="flex items-center justify-between gap-1 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/40 p-1">
                       <button
                         type="button"
                         (click)="decrementCart(product)"
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white font-black text-slate-700 shadow-xs transition hover:bg-slate-100 hover:text-blue-600 active:scale-95"
+                        class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-slate-800 font-black text-slate-700 dark:text-slate-200 shadow-2xs transition hover:bg-slate-50 hover:text-blue-600 active:scale-95 cursor-pointer"
                         [title]="cart.quantityOf(product.id) === 1 ? 'Quitar del carrito' : 'Restar una unidad'"
                       >
-                        <span class="text-base leading-none">−</span>
+                        <span class="text-sm sm:text-base leading-none">−</span>
                       </button>
 
-                      <div class="flex flex-1 flex-col items-center justify-center px-1">
-                        <div class="flex items-center justify-center gap-1">
+                      <div class="flex flex-1 flex-col items-center justify-center px-0.5 sm:px-1">
+                        <div class="flex items-center justify-center gap-0.5 sm:gap-1">
                           <input
                             type="number"
                             min="1"
@@ -511,43 +326,40 @@ export interface CatalogProduct extends Product {
                             (input)="onQuantityInput(product, $event)"
                             (change)="onQuantityChange(product, $event)"
                             (keydown.enter)="onQuantityEnter($event)"
-                            class="h-8 w-16 rounded-lg border border-blue-200 bg-white px-1 text-center font-mono text-sm font-black text-blue-950 shadow-inner outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-400/40"
+                            class="h-6 w-9 sm:h-7 sm:w-14 rounded border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 text-center font-mono text-[11px] sm:text-xs font-black text-blue-950 dark:text-blue-100 outline-none"
                             [attr.aria-label]="'Cantidad de ' + product.name"
                           />
-                          <span class="text-[11px] font-bold text-blue-900 truncate max-w-[65px]" [title]="product.unit">
+                          <span class="text-[9px] sm:text-[10px] font-bold text-blue-900 dark:text-blue-300 truncate max-w-[36px] sm:max-w-[50px] hidden sm:inline" [title]="product.unit">
                             {{ product.unit }}
                           </span>
                         </div>
-                        <span class="mt-0.5 text-[9px] font-semibold text-blue-600">
-                          máx. {{ product.stock }} disponible{{ product.stock === 1 ? '' : 's' }}
-                        </span>
                       </div>
 
                       <button
                         type="button"
                         (click)="incrementCart(product)"
                         [disabled]="cart.quantityOf(product.id) >= product.stock"
-                        class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-600 font-black text-white shadow-xs transition hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                        class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-[#1F5BFF] font-black text-white shadow-2xs transition hover:bg-[#1a4ed9] active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 cursor-pointer"
                         title="Agregar una unidad más"
                       >
-                        <span class="text-base leading-none">+</span>
+                        <span class="text-sm sm:text-base leading-none">+</span>
                       </button>
                     </div>
                   } @else {
-                    <!-- Botón normal para agregar al carrito -->
+                    <!-- Botón normal para agregar -->
                     <button
                       type="button"
-                      class="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 text-xs font-black text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-500 active:scale-98 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+                      class="flex h-8 sm:h-10 w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#1F5BFF] text-[11px] sm:text-xs font-bold text-white shadow-xs transition hover:bg-[#1a4ed9] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:shadow-none cursor-pointer"
                       [disabled]="product.stock <= 0"
                       (click)="add(product)"
                     >
                       @if (product.stock <= 0) {
-                        <span>Sin existencias</span>
+                        <span>Sin stock</span>
                       } @else {
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="h-4 w-4">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="h-3 w-3 sm:h-3.5 sm:w-3.5">
                           <path d="M12 5v14M5 12h14" />
                         </svg>
-                        <span>Agregar al carrito</span>
+                        <span>Agregar<span class="hidden sm:inline"> al carrito</span></span>
                       }
                     </button>
                   }
@@ -555,40 +367,40 @@ export interface CatalogProduct extends Product {
               </div>
             </article>
           } @empty {
-            <div class="rounded-3xl border border-slate-200 bg-white/90 p-8 sm:p-12 text-center shadow-sm sm:col-span-2 lg:col-span-3 xl:col-span-4 dark:border-slate-800 dark:bg-slate-900/90">
-              <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-8 w-8">
+            <div class="col-span-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-12 text-center shadow-xs">
+              <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-[#1F5BFF] dark:text-blue-400">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-7 w-7">
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.3-4.3" />
                 </svg>
               </div>
-              <h3 class="mt-4 text-base font-bold text-slate-800 dark:text-slate-100">No se encontraron productos</h3>
-              <p class="mt-1 text-xs text-slate-500 max-w-sm mx-auto dark:text-slate-400">
-                No hay materiales que coincidan con los criterios seleccionados. Prueba con otro término o limpia los filtros.
+              <h3 class="mt-4 text-base font-bold text-slate-800 dark:text-slate-100">No se encontraron materiales</h3>
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+                No hay productos que coincidan con "{{ queryText }}". Prueba con otro término o limpia los filtros.
               </p>
               <button
                 type="button"
                 (click)="resetFilters()"
-                class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-500"
+                class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-700 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#1F5BFF] cursor-pointer"
               >
-                Ver todos los productos
+                Ver todos los materiales
               </button>
             </div>
           }
         </div>
       }
 
-      <!-- PAGINACIÓN ELEGANTE -->
+      <!-- PAGINACIÓN -->
       @if (totalPages() > 1) {
-        <nav class="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl border border-slate-200/90 bg-white/95 px-6 py-4 shadow-sm backdrop-blur-md" aria-label="Paginación del catálogo">
-          <p class="text-xs font-semibold text-slate-500">
-            Mostrando página <span class="font-bold text-slate-900">{{ page() }}</span> de <span class="font-bold text-slate-900">{{ totalPages() }}</span> (Total {{ totalCount() }} materiales)
+        <nav class="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 px-5 py-3.5 shadow-xs" aria-label="Paginación del catálogo">
+          <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Página <span class="font-bold text-slate-900 dark:text-white">{{ page() }}</span> de <span class="font-bold text-slate-900 dark:text-white">{{ totalPages() }}</span> (Total {{ totalCount() }} materiales)
           </p>
 
           <div class="flex items-center gap-2">
             <button
               type="button"
-              class="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              class="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               [disabled]="page() <= 1"
               (click)="goToPage(page() - 1)"
             >
@@ -598,13 +410,13 @@ export interface CatalogProduct extends Product {
               Anterior
             </button>
 
-            <span class="rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700 border border-blue-200">
+            <span class="rounded-lg bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 text-xs font-bold text-[#1F5BFF] dark:text-blue-300 border border-blue-200 dark:border-blue-900/50">
               {{ page() }} / {{ totalPages() }}
             </span>
 
             <button
               type="button"
-              class="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              class="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
               [disabled]="page() >= totalPages()"
               (click)="goToPage(page() + 1)"
             >
@@ -701,21 +513,12 @@ export class ShopComponent implements OnInit, OnDestroy {
 
   private static hasShownPendingAlertInSession = false;
 
-  protected onPendingBadgeClick(): void {
-    if (this.authService?.requiresProfileCompletion()) {
-      this.showCompleteProfileModal();
-    } else {
-      this.showPendingSweetAlert();
-    }
-  }
-
   protected showCompleteProfileModal(): void {
     const user = this.authService?.getUser();
-    const defaultName = user?.fullName || "";
 
     void Swal.fire({
-      icon: "info",
-      title: "¡Completa tus datos comerciales!",
+      icon: 'info',
+      title: '¡Completa tus datos comerciales!',
       html: `
         <div style="text-align: left; font-size: 13.5px; line-height: 1.5; padding: 4px 0;">
           <p style="margin-bottom: 12px; color: #475569;">
@@ -753,39 +556,39 @@ export class ShopComponent implements OnInit, OnDestroy {
       `,
       focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: "Enviar Solicitud",
-      cancelButtonText: "Más tarde",
-      confirmButtonColor: "#1a5cff",
-      cancelButtonColor: "#94a3b8",
-      width: "480px",
+      confirmButtonText: 'Enviar Solicitud',
+      cancelButtonText: 'Más tarde',
+      confirmButtonColor: '#1F5BFF',
+      cancelButtonColor: '#94a3b8',
+      width: '480px',
       customClass: {
-        popup: "rounded-3xl shadow-2xl",
-        confirmButton: "rounded-xl px-5 py-2.5 font-bold text-xs uppercase tracking-wider",
-        cancelButton: "rounded-xl px-5 py-2.5 font-bold text-xs uppercase tracking-wider"
+        popup: 'rounded-3xl shadow-2xl',
+        confirmButton: 'rounded-xl px-5 py-2.5 font-bold text-xs uppercase tracking-wider',
+        cancelButton: 'rounded-xl px-5 py-2.5 font-bold text-xs uppercase tracking-wider'
       },
       preConfirm: () => {
-        const docInput = document.getElementById("swal-doc") as HTMLInputElement;
-        const phoneInput = document.getElementById("swal-phone") as HTMLInputElement;
-        const ageInput = document.getElementById("swal-age") as HTMLInputElement;
-        const addrInput = document.getElementById("swal-addr") as HTMLInputElement;
+        const docInput = document.getElementById('swal-doc') as HTMLInputElement;
+        const phoneInput = document.getElementById('swal-phone') as HTMLInputElement;
+        const ageInput = document.getElementById('swal-age') as HTMLInputElement;
+        const addrInput = document.getElementById('swal-addr') as HTMLInputElement;
 
         const documentNumber = docInput?.value?.trim();
         const phoneNumber = phoneInput?.value?.trim();
-        const ageVal = parseInt(ageInput?.value?.trim() || "0", 10);
+        const ageVal = parseInt(ageInput?.value?.trim() || '0', 10);
         const address = addrInput?.value?.trim();
 
         if (!documentNumber || documentNumber.length < 5) {
-          Swal.showValidationMessage("Por favor ingresa un número de Cédula o NIT válido (mínimo 5 caracteres).");
+          Swal.showValidationMessage('Por favor ingresa un número de Cédula o NIT válido (mínimo 5 caracteres).');
           return false;
         }
 
         if (!phoneNumber || phoneNumber.length < 7) {
-          Swal.showValidationMessage("Por favor ingresa un teléfono de contacto válido (mínimo 7 dígitos).");
+          Swal.showValidationMessage('Por favor ingresa un teléfono de contacto válido (mínimo 7 dígitos).');
           return false;
         }
 
         if (!ageVal || ageVal < 18 || ageVal > 120) {
-          Swal.showValidationMessage("Debes ser mayor de edad (mínimo 18 años) para registrar una cuenta comercial.");
+          Swal.showValidationMessage('Debes ser mayor de edad (mínimo 18 años) para registrar una cuenta comercial.');
           return false;
         }
 
@@ -800,36 +603,36 @@ export class ShopComponent implements OnInit, OnDestroy {
       if (!result.isConfirmed || !result.value || !this.authService) return;
 
       this.authService.completeProfile(result.value).subscribe({
-        next: (res) => {
+        next: () => {
           void Swal.fire({
-            icon: "success",
-            title: "¡Solicitud enviada con éxito!",
+            icon: 'success',
+            title: '¡Solicitud enviada con éxito!',
             html: `
               <div style="text-align: left; font-size: 14px; line-height: 1.6; padding: 4px 0;">
                 <p style="margin-bottom: 8px;">
                   Tus datos han sido registrados correctamente y tu <strong>solicitud de cuenta de cliente</strong> ya está en la bandeja del administrador.
                 </p>
                 <p style="font-size: 12.5px; opacity: 0.85; margin-top: 10px; border-top: 1px dashed rgba(148, 163, 184, 0.4); padding-top: 8px;">
-                  Mientras el administrador aprueba tu cuenta, puedes seguir explorando los productos del catálogo.
+                  Mientras el administrador aprueba tu cuenta, puedes seguir cotizando y explorando los productos del catálogo.
                 </p>
               </div>
             `,
-            confirmButtonText: "Explorar catálogo",
-            confirmButtonColor: "#1a5cff",
+            confirmButtonText: 'Explorar catálogo',
+            confirmButtonColor: '#1F5BFF',
             customClass: {
-              popup: "rounded-3xl shadow-2xl",
-              confirmButton: "rounded-xl px-5 py-2.5 font-bold text-xs uppercase tracking-wider"
+              popup: 'rounded-3xl shadow-2xl',
+              confirmButton: 'rounded-xl px-5 py-2.5 font-bold text-xs uppercase tracking-wider'
             }
           });
         },
         error: (err) => {
           const apiErr = toApiError(err);
           void Swal.fire({
-            icon: "error",
-            title: "No se pudo enviar la solicitud",
-            text: apiErr.message || "Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo.",
-            confirmButtonText: "Reintentar",
-            confirmButtonColor: "#1a5cff"
+            icon: 'error',
+            title: 'No se pudo enviar la solicitud',
+            text: apiErr.message || 'Ocurrió un error al procesar tu solicitud. Por favor intenta de nuevo.',
+            confirmButtonText: 'Reintentar',
+            confirmButtonColor: '#1F5BFF'
           }).then(() => {
             this.showCompleteProfileModal();
           });
@@ -856,7 +659,7 @@ export class ShopComponent implements OnInit, OnDestroy {
         </div>
       `,
       confirmButtonText: 'Entendido, ver catálogo',
-      confirmButtonColor: '#2563eb',
+      confirmButtonColor: '#1F5BFF',
       width: '460px',
       customClass: {
         popup: 'rounded-3xl shadow-2xl',
@@ -888,7 +691,6 @@ export class ShopComponent implements OnInit, OnDestroy {
     this.checkPendingCustomerAlert();
     this.load();
     this.stockChangeSub = this.notificationService.stockOrSaleChanged$.subscribe(() => {
-      // Recargar catálogo silenciosamente en tiempo real al confirmar ventas o actualizar stock
       this.load(true);
     });
   }
@@ -997,10 +799,6 @@ export class ShopComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Obtiene o calcula la capacidad de referencia (tope visual) para el producto.
-   * Utiliza caché en memoria para evitar accesos síncronos a localStorage en render.
-   */
   private getCapacityFor(productId: string, currentStock: number): number {
     if (currentStock <= 0) return 1;
 
@@ -1034,11 +832,64 @@ export class ShopComponent implements OnInit, OnDestroy {
     return Math.min(100, Math.max(6, pct));
   }
 
+  /**
+   * Resuelve el tipo semántico de categoría para compatibilidad con pruebas unitarias y temas.
+   */
+  protected getCategoryType(product: Product): string {
+    const cat = (product.category || '').toLowerCase();
+    if (cat.includes('cemento') || cat.includes('concreto') || cat.includes('mortero')) return 'cemento';
+    if (cat.includes('acero') || cat.includes('hierro') || cat.includes('varilla') || cat.includes('malla')) return 'acero';
+    if (cat.includes('ladrillo') || cat.includes('bloque') || cat.includes('mampost') || cat.includes('adoquin')) return 'mamposteria';
+    if (cat.includes('tub') || cat.includes('pvc') || cat.includes('fontan') || cat.includes('plomer')) return 'tuberia';
+    if (cat.includes('herramienta')) return 'herramienta';
+    if (cat.includes('pintur') || cat.includes('acabado') || cat.includes('esmalte')) return 'acabados';
+    if (cat.includes('electr')) return 'electrico';
+    if (cat.includes('arena') || cat.includes('agregado') || cat.includes('grava')) return 'agregados';
+    if (cat.includes('madera')) return 'madera';
+
+    const text = `${product.sku || ''} ${product.name || ''} ${product.description || ''}`.toLowerCase();
+    if (text.includes('cemento') || text.includes('concreto') || text.includes('mortero') || text.includes('cem-')) return 'cemento';
+    if (text.includes('acero') || text.includes('hierro') || text.includes('varilla') || text.includes('malla') || text.includes('viga') || text.includes('ace-')) return 'acero';
+    if (text.includes('ladrillo') || text.includes('bloque') || text.includes('adoquin') || text.includes('mampost') || text.includes('lad-') || text.includes('blo-')) return 'mamposteria';
+    if (text.includes('tub') || text.includes('pvc') || text.includes('fontaner') || text.includes('plomer') || text.includes('codo') || text.includes('valvula')) return 'tuberia';
+    if (text.includes('herramienta') || text.includes('pala') || text.includes('martillo') || text.includes('carretilla') || text.includes('llave') || text.includes('alicate') || text.includes('taladro') || text.includes('her-')) return 'herramienta';
+    if (text.includes('pintur') || text.includes('esmalte') || text.includes('estuco') || text.includes('yeso') || text.includes('ceramica') || text.includes('acabado') || text.includes('brocha') || text.includes('pin-')) return 'acabados';
+    if (text.includes('electr') || text.includes('cable') || text.includes('breaker') || text.includes('toma') || text.includes('interruptor') || text.includes('ele-')) return 'electrico';
+    if (text.includes('arena') || text.includes('agregado') || text.includes('grava') || text.includes('gravilla') || text.includes('triturado') || text.includes('are-')) return 'agregados';
+    if (text.includes('madera') || text.includes('tabla') || text.includes('liston') || text.includes('triplay') || text.includes('triplex') || text.includes('mad-')) return 'madera';
+    return 'general';
+  }
+
+  protected getCategoryGradient(product: Product): string {
+    const type = this.getCategoryType(product);
+    switch (type) {
+      case 'cemento':
+        return 'bg-gradient-to-br from-slate-800 via-zinc-800 to-slate-900 text-slate-200';
+      case 'acero':
+        return 'bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 text-sky-200';
+      case 'mamposteria':
+        return 'bg-gradient-to-br from-amber-950 via-orange-950 to-stone-900 text-amber-200';
+      case 'tuberia':
+        return 'bg-gradient-to-br from-cyan-950 via-sky-900 to-slate-900 text-cyan-200';
+      case 'herramienta':
+        return 'bg-gradient-to-br from-amber-950 via-stone-900 to-slate-900 text-amber-300';
+      case 'acabados':
+        return 'bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 text-purple-200';
+      case 'electrico':
+        return 'bg-gradient-to-br from-yellow-950 via-amber-950 to-slate-950 text-yellow-300';
+      case 'agregados':
+        return 'bg-gradient-to-br from-stone-800 via-amber-950 to-stone-900 text-amber-200';
+      case 'madera':
+        return 'bg-gradient-to-br from-amber-950 via-yellow-950 to-stone-900 text-amber-200';
+      default:
+        return 'bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-blue-200';
+    }
+  }
+
   private static readonly imageCache = new Map<string, string>();
 
   /**
-   * Obtiene la ruta de la fotografía representativa según el material, categoría o SKU.
-   * Cuenta con memoización para alto rendimiento.
+   * Obtiene la fotografía real del material según la categoría, SKU o nombre.
    */
   protected getProductImage(product: Product): string {
     const key = `${product.id || ''}_${product.sku || ''}_${product.name || ''}_${product.category || ''}`;
@@ -1144,81 +995,6 @@ export class ShopComponent implements OnInit, OnDestroy {
     const target = event.target as HTMLImageElement | null;
     if (target && !target.src.endsWith('img/products/general.jpg')) {
       target.src = 'img/products/general.jpg';
-    }
-  }
-
-  /**
-   * Resuelve el tipo semántico de categoría para renderizar el icono/ilustración SVG correspondiente.
-   */
-  protected getCategoryType(product: Product): string {
-    const cat = (product.category || '').toLowerCase();
-    if (cat.includes('cemento') || cat.includes('concreto') || cat.includes('mortero')) return 'cemento';
-    if (cat.includes('acero') || cat.includes('hierro') || cat.includes('varilla') || cat.includes('malla')) return 'acero';
-    if (cat.includes('ladrillo') || cat.includes('bloque') || cat.includes('mampost') || cat.includes('adoquin')) return 'mamposteria';
-    if (cat.includes('tub') || cat.includes('pvc') || cat.includes('fontan') || cat.includes('plomer')) return 'tuberia';
-    if (cat.includes('herramienta')) return 'herramienta';
-    if (cat.includes('pintur') || cat.includes('acabado') || cat.includes('esmalte')) return 'acabados';
-    if (cat.includes('electr')) return 'electrico';
-    if (cat.includes('arena') || cat.includes('agregado') || cat.includes('grava')) return 'agregados';
-    if (cat.includes('madera')) return 'madera';
-
-    const text = `${product.sku || ''} ${product.name || ''} ${product.description || ''}`.toLowerCase();
-    if (text.includes('cemento') || text.includes('concreto') || text.includes('mortero') || text.includes('cem-')) {
-      return 'cemento';
-    }
-    if (text.includes('acero') || text.includes('hierro') || text.includes('varilla') || text.includes('malla') || text.includes('viga') || text.includes('ace-')) {
-      return 'acero';
-    }
-    if (text.includes('ladrillo') || text.includes('bloque') || text.includes('adoquin') || text.includes('mampost') || text.includes('lad-') || text.includes('blo-')) {
-      return 'mamposteria';
-    }
-    if (text.includes('tub') || text.includes('pvc') || text.includes('fontaner') || text.includes('plomer') || text.includes('codo') || text.includes('valvula')) {
-      return 'tuberia';
-    }
-    if (text.includes('herramienta') || text.includes('pala') || text.includes('martillo') || text.includes('carretilla') || text.includes('llave') || text.includes('alicate') || text.includes('taladro') || text.includes('her-')) {
-      return 'herramienta';
-    }
-    if (text.includes('pintur') || text.includes('esmalte') || text.includes('estuco') || text.includes('yeso') || text.includes('ceramica') || text.includes('acabado') || text.includes('brocha') || text.includes('pin-')) {
-      return 'acabados';
-    }
-    if (text.includes('electr') || text.includes('cable') || text.includes('breaker') || text.includes('toma') || text.includes('interruptor') || text.includes('ele-')) {
-      return 'electrico';
-    }
-    if (text.includes('arena') || text.includes('agregado') || text.includes('grava') || text.includes('gravilla') || text.includes('triturado') || text.includes('are-')) {
-      return 'agregados';
-    }
-    if (text.includes('madera') || text.includes('tabla') || text.includes('liston') || text.includes('triplay') || text.includes('triplex') || text.includes('mad-')) {
-      return 'madera';
-    }
-    return 'general';
-  }
-
-  /**
-   * Asigna un degradado atmosférico con diseño industrial para la cabecera del material.
-   */
-  protected getCategoryGradient(product: Product): string {
-    const type = this.getCategoryType(product);
-    switch (type) {
-      case 'cemento':
-        return 'bg-gradient-to-br from-slate-800 via-zinc-800 to-slate-900 text-slate-200';
-      case 'acero':
-        return 'bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800 text-sky-200';
-      case 'mamposteria':
-        return 'bg-gradient-to-br from-amber-950 via-orange-950 to-stone-900 text-amber-200';
-      case 'tuberia':
-        return 'bg-gradient-to-br from-cyan-950 via-sky-900 to-slate-900 text-cyan-200';
-      case 'herramienta':
-        return 'bg-gradient-to-br from-amber-950 via-stone-900 to-slate-900 text-amber-300';
-      case 'acabados':
-        return 'bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 text-purple-200';
-      case 'electrico':
-        return 'bg-gradient-to-br from-yellow-950 via-amber-950 to-slate-950 text-yellow-300';
-      case 'agregados':
-        return 'bg-gradient-to-br from-stone-800 via-amber-950 to-stone-900 text-amber-200';
-      case 'madera':
-        return 'bg-gradient-to-br from-amber-950 via-yellow-950 to-stone-900 text-amber-200';
-      default:
-        return 'bg-gradient-to-br from-slate-900 via-slate-800 to-blue-950 text-blue-200';
     }
   }
 

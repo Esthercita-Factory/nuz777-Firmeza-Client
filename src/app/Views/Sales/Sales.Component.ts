@@ -107,11 +107,11 @@ import { AdminNotificationService } from '../../Services/admin-notification.serv
                   <div class="flex items-center justify-end gap-1">
                     <button
                       type="button"
-                      title="Descargar recibo PDF"
-                      class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                      (click)="downloadReceipt(sale)"
+                      title="Ver recibo PDF"
+                      class="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                      (click)="previewReceipt(sale)"
                     >
-                      <app-icon name="receipt" [size]="16" label="Descargar recibo PDF" />
+                      <app-icon name="receipt" [size]="16" label="Ver recibo PDF" />
                     </button>
                     <a
                       [routerLink]="['/ventas', sale.id]"
@@ -255,6 +255,12 @@ export class SalesComponent implements OnInit {
         this.toastService.success('Venta eliminada.');
         this.load();
       },
+      error: (error) => this.toastService.error(toApiError(error).message)
+    });
+  }
+
+  protected previewReceipt(sale: SaleSummary): void {
+    this.importsService.preview(this.salesService.receiptUrl(sale.id, true)).subscribe({
       error: (error) => this.toastService.error(toApiError(error).message)
     });
   }
