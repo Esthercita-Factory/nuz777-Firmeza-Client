@@ -44,6 +44,7 @@ describe('ShopComponent', () => {
 
     const mockAuthService = {
       isCustomerPending: () => false,
+      requiresProfileCompletion: () => false,
       isAuthenticated: () => false,
       me: () => of(null)
     };
