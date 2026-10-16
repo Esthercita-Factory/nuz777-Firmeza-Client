@@ -28,11 +28,12 @@ export class LogoComponent {
   readonly size = input<'sm' | 'md'>('md');
 }
 
+import { BottomNavComponent, BottomNavItem } from '../Shared/BottomNav.Component';
 import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, CurrencyPipe, DatePipe, ThemeToggleComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, CurrencyPipe, DatePipe, ThemeToggleComponent, BottomNavComponent],
   template: `
     <div class="flex min-h-screen flex-col bg-[#f8fafc] dark:bg-[#05070b]">
       <aside
@@ -377,7 +378,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
           </div>
         </header>
 
-        <main class="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 py-6 sm:py-8 lg:px-8 pb-24 lg:pb-8">
+        <main class="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 py-6 sm:py-8 lg:px-8 pb-28 lg:pb-8">
           <router-outlet />
         </main>
 
@@ -386,39 +387,14 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
         </footer>
 
         <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES (BOTTOM NAV BAR) -->
-        <nav
-          class="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-2 py-1 shadow-2xl backdrop-blur-xl lg:hidden"
-          aria-label="Navegación móvil inferior"
-        >
-          @for (item of navItems; track item.path) {
-            <a
-              [routerLink]="item.path"
-              routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
-              class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
-            >
-              <div class="relative flex items-center justify-center">
-                <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                  <path [attr.d]="item.icon" />
-                </svg>
-                @if (item.path === '/ventas' && notificationService.pendingSaleCount() > 0) {
-                  <span class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-white shadow-xs">
-                    {{ notificationService.pendingSaleCount() }}
-                  </span>
-                }
-                @if (item.path === '/solicitudes' && pendingCustomerCount() > 0) {
-                  <span class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white shadow-xs">
-                    {{ pendingCustomerCount() }}
-                  </span>
-                }
-              </div>
-              <span class="truncate max-w-[56px] text-center leading-none">{{ item.label }}</span>
-            </a>
-          }
-        </nav>
+        <app-bottom-nav
+          hideBreakpoint="lg"
+          [items]="mobileNavItems()"
+        />
 
         <!-- Botón flotante de Modo Claro / Oscuro para móvil -->
         <div class="lg:hidden">
-          <app-theme-toggle variant="fab" />
+          <app-theme-toggle variant="fab" positionClass="bottom-[88px] right-4" />
         </div>
       </div>
     </div>
@@ -463,6 +439,49 @@ export class ShellComponent implements OnInit, OnDestroy {
       icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M19 8v6M22 11h-6'
     }
   ];
+
+  protected readonly mobileNavItems = computed<BottomNavItem[]>(() => [
+    {
+      label: 'Inicio',
+      icon: 'M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z',
+      route: '/dashboard'
+    },
+    {
+      label: 'Productos',
+      icon: 'M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0',
+      route: '/productos'
+    },
+    {
+      label: 'Clientes',
+      icon: 'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',
+      route: '/clientes'
+    },
+    {
+      label: 'Ventas',
+      icon: 'M2 3h2l2.4 11.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21 7H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2M18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2',
+      route: '/ventas',
+      badge: this.notificationService.pendingSaleCount(),
+      badgeColor: 'bg-amber-500'
+    },
+    {
+      label: 'Más',
+      icon: 'M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z',
+      route: '',
+      subItems: [
+        {
+          label: 'Carga Masiva',
+          icon: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+          route: '/carga-masiva'
+        },
+        {
+          label: 'Solicitudes',
+          icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M19 8v6M22 11h-6',
+          route: '/solicitudes',
+          badge: this.pendingCustomerCount()
+        }
+      ]
+    }
+  ]);
 
   protected readonly sidebarOpen = signal(localStorage.getItem('firmeza-sidebar-open') === 'true');
   protected readonly currentNav = signal<NavItem | null>(null);

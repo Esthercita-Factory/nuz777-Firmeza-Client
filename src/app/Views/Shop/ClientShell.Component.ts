@@ -1,10 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import Swal from 'sweetalert2';
 import { toApiError } from '../../Services/Api.Service';
 import { AuthService } from '../../Services/auth.service';
 import { CartService } from '../../Services/cart.service';
 import { LogoComponent } from '../Layout/Shell.Component';
+import { BottomNavComponent, BottomNavItem } from '../Shared/BottomNav.Component';
 import { IconComponent } from '../Shared/Icon.Component';
 import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
 
@@ -15,7 +16,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
  */
 @Component({
   selector: 'app-client-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, IconComponent, ThemeToggleComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, IconComponent, ThemeToggleComponent, BottomNavComponent],
   template: `
     <div class="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-slate-50 text-slate-800">
       <!-- Barra superior limpia y ligera (sin backdrop-blur pesado) -->
@@ -112,7 +113,7 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
       </header>
 
       <!-- Contenedor central -->
-      <main class="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-24 sm:pb-8">
+      <main class="relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 pb-28 sm:pb-8">
         <router-outlet />
       </main>
 
@@ -131,53 +132,14 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
       </footer>
 
       <!-- BARRA DE NAVEGACIÓN INFERIOR PARA MÓVILES EN EL PORTAL DE CLIENTES -->
-      <nav
-        class="fixed inset-x-0 bottom-0 z-40 flex h-16 items-center justify-around border-t border-slate-200 bg-white px-2 py-1 sm:hidden"
-        aria-label="Navegación móvil del cliente"
-      >
-        <a
-          routerLink="/tienda"
-          routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
-          class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-5 w-5">
-            <rect width="7" height="7" x="3" y="3" rx="1" />
-            <rect width="7" height="7" x="14" y="3" rx="1" />
-            <rect width="7" height="7" x="14" y="14" rx="1" />
-            <rect width="7" height="7" x="3" y="14" rx="1" />
-          </svg>
-          <span>Catálogo</span>
-        </a>
-
-        <a
-          routerLink="/carrito"
-          routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
-          class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
-        >
-          <div class="relative flex items-center justify-center">
-            <app-icon name="cart" [size]="20" />
-            @if (cart.count() > 0) {
-              <span class="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-black text-white shadow-xs">
-                {{ cart.count() }}
-              </span>
-            }
-          </div>
-          <span>Carrito</span>
-        </a>
-
-        <a
-          routerLink="/mis-compras"
-          routerLinkActive="!text-blue-600 font-bold !opacity-100 scale-105"
-          class="relative flex flex-1 flex-col items-center justify-center gap-1 py-1 text-[10px] font-semibold text-slate-500 opacity-80 transition-all hover:text-blue-600 active:scale-95"
-        >
-          <app-icon name="receipt" [size]="20" />
-          <span>Mis compras</span>
-        </a>
-      </nav>
+      <app-bottom-nav
+        hideBreakpoint="sm"
+        [items]="navItems()"
+      />
 
       <!-- Botón flotante de Modo Claro / Oscuro para móvil -->
       <div class="sm:hidden">
-        <app-theme-toggle variant="fab" />
+        <app-theme-toggle variant="fab" positionClass="bottom-[88px] right-4" />
       </div>
     </div>
   `
@@ -189,6 +151,31 @@ export class ClientShellComponent {
 
   protected readonly year = new Date().getFullYear();
   protected readonly deletingAccount = signal(false);
+
+  protected readonly navItems = computed<BottomNavItem[]>(() => [
+    {
+      label: 'Catálogo',
+      icon: 'M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z',
+      route: '/tienda'
+    },
+    {
+      label: 'Carrito',
+      icon: 'M2 3h2l2.4 11.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21 7H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2M18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2',
+      route: '/carrito',
+      badge: this.cart.count(),
+      badgeColor: 'bg-amber-500'
+    },
+    {
+      label: 'Mis compras',
+      icon: [
+        'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z',
+        'M14 2v6h6',
+        'M16 13H8',
+        'M16 17H8'
+      ],
+      route: '/mis-compras'
+    }
+  ]);
 
   protected logout(): void {
     this.cart.clear();
