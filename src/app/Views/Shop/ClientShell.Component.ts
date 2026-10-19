@@ -73,7 +73,7 @@ import { productDetailModalOpenSignal } from './ProductDetailDrawer.Component';
           <div class="ml-auto flex items-center gap-3">
             @if (authService.getUser(); as user) {
               <div class="hidden items-center gap-2 sm:flex">
-                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 font-black text-xs">
+                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-100 font-black text-xs ">
                   {{ user.fullName.charAt(0).toUpperCase() }}
                 </span>
                 <div class="text-left">

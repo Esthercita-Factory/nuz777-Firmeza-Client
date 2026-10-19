@@ -1,22 +1,29 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, catchError, forkJoin, interval, of } from 'rxjs';
 import { toApiError } from '../../Services/Api.Service';
 import { AuthService } from '../../Services/auth.service';
 import { CartService } from '../../Services/cart.service';
-import { SaleSummary, SalesService } from '../../Services/sales.service';
+import { Sale, SaleLine, SaleSummary, SalesService } from '../../Services/sales.service';
+import { SaleDecisionService } from '../../Services/sale-decision.service';
 import { ConfirmService } from '../../Services/confirm.service';
 import { ImportsService, ToastService } from '../../Services/imports.service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
 import { Product, ProductsService } from '../../Services/products.service';
 import Swal from 'sweetalert2';
 
+export interface ActiveOrderProductLine {
+  sale: Sale;
+  line: SaleLine;
+  product: Product;
+}
+
 /**
  * Carrito y checkout profesional del portal del cliente.
  * Rediseño visual fiel con soporte completo para modo claro y oscuro,
- * flujo de pasos sincronizado con la confirmación del administrador,
- * tarjeta flotante de resumen y sección de productos sugeridos.
+ * flujo de pasos sincronizado con la confirmación/entrega del administrador,
+ * individualidad por pedido/producto, tarjeta flotante de resumen y sección de productos sugeridos.
  */
 @Component({
   selector: 'app-checkout',
@@ -45,17 +52,17 @@ import Swal from 'sweetalert2';
             </p>
           </div>
 
-          <!-- Indicador de pasos: 1 Carrito -> 2 Confirmación (Admin) -> 3 Recibo -->
+          <!-- Indicador de pasos: 1 Carrito -> 2 Confirmación -> 3 Recibo -->
           <div class="flex items-center gap-2 sm:gap-3 py-1">
             <!-- Paso 1: Carrito -->
             <div class="flex items-center gap-1.5 sm:gap-2">
               <span
                 class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shadow-sm transition-colors duration-200"
-                [class]="activeStepperStage() === 1
-                  ? 'bg-[#1F5BFF] text-white'
-                  : 'bg-emerald-600 text-white'"
+                [class]="isStep1Green()
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-[#1F5BFF] text-white'"
               >
-                @if (activeStepperStage() > 1) {
+                @if (isStep1Green()) {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="h-3.5 w-3.5">
                     <path d="M20 6 9 17l-5-5" />
                   </svg>
@@ -64,10 +71,10 @@ import Swal from 'sweetalert2';
                 }
               </span>
               <span
-                class="text-xs sm:text-sm transition-colors duration-200"
-                [class]="activeStepperStage() === 1
-                  ? 'font-bold text-[#1F5BFF]'
-                  : 'font-bold text-emerald-600 dark:text-emerald-400'"
+                class="text-xs sm:text-sm font-bold transition-colors duration-200"
+                [class]="isStep1Green()
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-[#1F5BFF]'"
               >
                 Carrito
               </span>
@@ -76,25 +83,33 @@ import Swal from 'sweetalert2';
             <!-- Conector 1 -> 2 -->
             <div
               class="h-px w-5 sm:w-8 transition-colors duration-200"
-              [class]="activeStepperStage() >= 2 ? 'bg-[#1F5BFF]' : 'bg-slate-300 dark:bg-slate-700'"
+              [class]="isStep2ConfirmedGreen()
+                ? 'bg-emerald-600'
+                : isStep2Pending()
+                  ? 'bg-[#1F5BFF]'
+                  : 'bg-slate-300 dark:bg-slate-700'"
             ></div>
 
-            <!-- Paso 2: Confirmación (por parte del administrador) -->
+            <!-- Paso 2: Confirmación (verde cuando el admin confirma la solicitud) -->
             <a
-              [routerLink]="trackedSale() ? '/mis-compras' : null"
+              [routerLink]="trackedSale() || activeOrders().length > 0 ? '/mis-compras' : null"
               class="flex items-center gap-1.5 sm:gap-2"
-              [class.cursor-pointer]="!!trackedSale()"
-              [title]="activeStepperStage() === 2 ? 'En espera de confirmación por el administrador' : 'Confirmación del administrador'"
+              [class.cursor-pointer]="!!trackedSale() || activeOrders().length > 0"
+              [title]="isStep2ConfirmedGreen()
+                ? 'Solicitud confirmada por el administrador'
+                : isStep2Pending()
+                  ? 'Esperando confirmación del administrador'
+                  : 'Confirmación del administrador'"
             >
               <span
                 class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
-                [class]="activeStepperStage() === 2
-                  ? 'bg-amber-500 text-white shadow-sm ring-4 ring-amber-500/15 animate-pulse'
-                  : activeStepperStage() > 2
-                    ? 'bg-emerald-600 text-white shadow-sm'
+                [class]="isStep2ConfirmedGreen()
+                  ? 'bg-emerald-600 text-white shadow-sm ring-4 ring-emerald-500/15'
+                  : isStep2Pending()
+                    ? 'bg-amber-500 text-white shadow-sm ring-4 ring-amber-500/15 animate-pulse'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'"
               >
-                @if (activeStepperStage() > 2) {
+                @if (isStep2ConfirmedGreen()) {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="h-3.5 w-3.5">
                     <path d="M20 6 9 17l-5-5" />
                   </svg>
@@ -104,10 +119,10 @@ import Swal from 'sweetalert2';
               </span>
               <span
                 class="text-xs sm:text-sm transition-colors duration-200"
-                [class]="activeStepperStage() === 2
-                  ? 'font-bold text-amber-600 dark:text-amber-400'
-                  : activeStepperStage() > 2
-                    ? 'font-bold text-emerald-600 dark:text-emerald-400'
+                [class]="isStep2ConfirmedGreen()
+                  ? 'font-bold text-emerald-600 dark:text-emerald-400'
+                  : isStep2Pending()
+                    ? 'font-bold text-amber-600 dark:text-amber-400'
                     : 'font-medium text-slate-400 dark:text-slate-500'"
               >
                 Confirmación
@@ -117,29 +132,35 @@ import Swal from 'sweetalert2';
             <!-- Conector 2 -> 3 -->
             <div
               class="h-px w-5 sm:w-8 transition-colors duration-200"
-              [class]="activeStepperStage() === 3 ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'"
+              [class]="isStep3DeliveredGreen() ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'"
             ></div>
 
-            <!-- Paso 3: Recibo (habilitado cuando el admin confirma/entrega) -->
+            <!-- Paso 3: Recibo (verde cuando el admin marca como Entregado) -->
             <button
               type="button"
-              [disabled]="activeStepperStage() < 3 || !trackedSale()"
+              [disabled]="!isStep3DeliveredGreen() || !trackedSale()"
               (click)="openTrackedReceipt()"
               class="flex items-center gap-1.5 sm:gap-2 disabled:cursor-default"
-              [class.cursor-pointer]="activeStepperStage() === 3 && !!trackedSale()"
-              [title]="activeStepperStage() === 3 ? 'Ver recibo PDF de tu compra aprobada' : 'Disponible cuando el administrador confirme el pedido'"
+              [class.cursor-pointer]="isStep3DeliveredGreen() && !!trackedSale()"
+              [title]="isStep3DeliveredGreen() ? 'Ver recibo PDF de tu compra entregada' : 'Disponible cuando el pedido sea entregado'"
             >
               <span
                 class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
-                [class]="activeStepperStage() === 3
+                [class]="isStep3DeliveredGreen()
                   ? 'bg-emerald-600 text-white shadow-sm ring-4 ring-emerald-500/15'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'"
               >
-                3
+                @if (isStep3DeliveredGreen()) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="h-3.5 w-3.5">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                } @else {
+                  3
+                }
               </span>
               <span
                 class="text-xs sm:text-sm transition-colors duration-200"
-                [class]="activeStepperStage() === 3
+                [class]="isStep3DeliveredGreen()
                   ? 'font-bold text-emerald-600 dark:text-emerald-400 underline decoration-emerald-500/50 underline-offset-4'
                   : 'font-medium text-slate-400 dark:text-slate-500'"
               >
@@ -156,7 +177,7 @@ import Swal from 'sweetalert2';
         </div>
       }
 
-      @if (cart.isEmpty()) {
+      @if (cart.isEmpty() && activeOrderLines().length === 0) {
         <!-- CARRITO VACÍO -->
         <div
           class="rounded-[24px] border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-14 text-center relative overflow-hidden shadow-sm"
@@ -291,24 +312,27 @@ import Swal from 'sweetalert2';
                 <span>Tus productos</span>
                 <span class="text-slate-400 dark:text-slate-600 font-normal">·</span>
                 <span class="text-slate-500 dark:text-slate-400 text-sm font-semibold">
-                  {{ cart.count() }} {{ cart.count() === 1 ? 'ítem' : 'ítems' }}
+                  {{ totalVisibleUnits() }} {{ totalVisibleUnits() === 1 ? 'ítem' : 'ítems' }}
                 </span>
               </div>
-              <button
-                type="button"
-                class="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                [disabled]="saving()"
-                (click)="clear()"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5">
-                  <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                </svg>
-                <span>Vaciar carrito</span>
-              </button>
+              @if (!cart.isEmpty()) {
+                <button
+                  type="button"
+                  class="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  [disabled]="saving()"
+                  (click)="clear()"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-3.5 w-3.5">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                  <span>Vaciar carrito</span>
+                </button>
+              }
             </div>
 
             <!-- Filas de productos -->
             <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <!-- 1. PRODUCTOS NUEVOS EN EL CARRITO (AÚN NO ENVIADOS AL ADMIN) -->
               @for (line of cart.lines(); track line.product.id) {
                 <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
                   <!-- Lado izquierdo: Miniatura de 84px + Info -->
@@ -337,7 +361,7 @@ import Swal from 'sweetalert2';
                           @case ('mamposteria') {
                             <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
                               <rect x="10" y="14" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
-                              <rect x="34" y="14" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                              <rect x="34" y="14" width="20" height="10" rx="1.5" fill="currentColor" stroke-width="2" />
                               <rect x="10" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
                               <rect x="34" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
                             </svg>
@@ -393,9 +417,16 @@ import Swal from 'sweetalert2';
 
                     <!-- Datos del material -->
                     <div class="min-w-0 flex-1">
-                      <h3 class="font-bold text-slate-900 dark:text-white text-base leading-snug line-clamp-2">
-                        {{ line.product.name }}
-                      </h3>
+                      <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="font-bold text-slate-900 dark:text-white text-base leading-snug line-clamp-2">
+                          {{ line.product.name }}
+                        </h3>
+                        @if (activeOrderLines().length > 0) {
+                          <span class="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-950/60 px-2.5 py-0.5 text-[11px] font-bold text-[#1F5BFF] dark:text-blue-400 border border-blue-200 dark:border-blue-800/70">
+                            Nuevo · Por solicitar
+                          </span>
+                        }
+                      </div>
                       <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         <span class="font-mono font-bold">{{ line.product.sku }}</span>
                         <span class="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
@@ -476,6 +507,140 @@ import Swal from 'sweetalert2';
                   </div>
                 </div>
               }
+
+              <!-- 2. PRODUCTOS SOLICITADOS EN PEDIDOS ACTIVOS (PENDING O CONFIRMED) CON SU ESTADO INDIVIDUAL -->
+              @for (item of activeOrderLines(); track item.sale.id + '-' + item.line.productId) {
+                <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                  <!-- Lado izquierdo: Miniatura de 84px + Info -->
+                  <div class="flex items-center gap-4 min-w-0 flex-1">
+                    <!-- Miniatura de 84px con radio 14px -->
+                    <div class="w-[84px] h-[84px] rounded-[14px] shrink-0 overflow-hidden relative flex items-center justify-center p-2 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs {{ getCategoryGradient(item.product) }}">
+                      <div class="pointer-events-none absolute inset-0 auth-grid opacity-20"></div>
+                      <div class="relative z-10 flex items-center justify-center text-white/90">
+                        @switch (getCategoryType(item.product)) {
+                          @case ('cemento') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <rect x="14" y="16" width="36" height="42" rx="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.5" />
+                              <path d="M14 24h36M14 48h36" stroke="currentColor" stroke-width="2" stroke-dasharray="2 2" />
+                              <circle cx="32" cy="36" r="8" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="2" />
+                              <path d="M28 36h8M32 32v8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+                            </svg>
+                          }
+                          @case ('acero') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <path d="M12 16h40M12 48h40" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+                              <path d="M32 16v32" stroke="currentColor" stroke-width="6" stroke-linecap="round" />
+                              <circle cx="16" cy="32" r="3" fill="currentColor" />
+                              <circle cx="48" cy="32" r="3" fill="currentColor" />
+                            </svg>
+                          }
+                          @case ('mamposteria') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <rect x="10" y="14" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                              <rect x="34" y="14" width="20" height="10" rx="1.5" fill="currentColor" stroke-width="2" />
+                              <rect x="10" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                              <rect x="34" y="40" width="20" height="10" rx="1.5" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                          }
+                          @case ('tuberia') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <path d="M12 28h22c4.4 0 8 3.6 8 8v16" stroke="currentColor" stroke-width="5" stroke-linecap="round" />
+                              <circle cx="24" cy="28" r="6" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2" />
+                              <path d="M24 16v6M20 16h8" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+                            </svg>
+                          }
+                          @case ('herramienta') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <path d="M20 14h16l-3 8h-10l-3-8z" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                              <path d="M46 16a7 7 0 0 0-9 2l-18 26a3 3 0 0 0 4 4l18-26a7 7 0 0 0 5-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                          }
+                          @case ('acabados') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <path d="M16 22l4 28a4 4 0 0 0 4 4h16a4 4 0 0 0 4-4l4-28H16z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                              <ellipse cx="32" cy="22" rx="16" ry="4" stroke="currentColor" stroke-width="2.5" />
+                            </svg>
+                          }
+                          @case ('electrico') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <circle cx="32" cy="32" r="22" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2" />
+                              <path d="M36 12L22 34h12l-6 18 20-24H34l6-16z" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                            </svg>
+                          }
+                          @case ('agregados') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <path d="M10 48c6-14 14-26 22-26s16 12 22 26H10z" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" />
+                              <circle cx="28" cy="38" r="2" fill="currentColor" />
+                              <circle cx="36" cy="36" r="2.5" fill="currentColor" />
+                            </svg>
+                          }
+                          @case ('madera') {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <rect x="14" y="16" width="36" height="32" rx="3" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2.5" />
+                              <path d="M22 16v32M32 16v32" stroke="currentColor" stroke-width="1.5" stroke-opacity="0.5" />
+                            </svg>
+                          }
+                          @default {
+                            <svg viewBox="0 0 64 64" fill="none" class="h-11 w-11 drop-shadow-sm">
+                              <rect x="12" y="14" width="40" height="36" rx="4" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="2.5" />
+                              <path d="M12 24h40M26 24v26" stroke="currentColor" stroke-width="2" stroke-opacity="0.6" />
+                              <circle cx="40" cy="37" r="6" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                          }
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Datos del material y estado individual del pedido -->
+                    <div class="min-w-0 flex-1">
+                      <h3 class="font-bold text-slate-900 dark:text-white text-base leading-snug line-clamp-2">
+                        {{ item.line.productName }}
+                      </h3>
+                      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        <span class="font-mono font-bold">{{ item.line.productSku }}</span>
+                        <span class="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                        <span>{{ item.line.unitPrice | currency: 'COP' }} / Unidad</span>
+                        <span class="mx-1.5 text-slate-300 dark:text-slate-600">·</span>
+                        <span>IVA incl.</span>
+                      </p>
+
+                      <!-- Estado individual: Confirmado (verde) o En espera de confirmación (ámbar) -->
+                      <div class="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                        @if (item.sale.status === 'Confirmed') {
+                          <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70">
+                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                            Confirmado · {{ item.sale.saleNumber }} (Esperando entrega)
+                          </span>
+                        } @else {
+                          <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-950/50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/70">
+                            <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            Esperando confirmación del admin · {{ item.sale.saleNumber }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Lado derecho: Cantidad solicitada + Total línea -->
+                  <div class="flex items-center justify-between sm:justify-end gap-5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+                    <!-- Cantidad fija de la solicitud enviada -->
+                    <div class="flex items-center gap-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/70 px-3 py-1.5">
+                      <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Cant:</span>
+                      <span class="font-mono text-sm font-black text-slate-900 dark:text-white">{{ item.line.quantity }}</span>
+                    </div>
+
+                    <!-- Total de línea -->
+                    <div class="text-right min-w-[125px]">
+                      <p class="text-[18px] font-black text-slate-900 dark:text-white tracking-tight">
+                        {{ lineTotal(item.line.unitPrice, item.line.quantity) | currency: 'COP' }}
+                      </p>
+                      <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                        Base: {{ lineBase(item.line.unitPrice, item.line.quantity) | currency: 'COP' }} · IVA: {{ lineIva(item.line.unitPrice, item.line.quantity) | currency: 'COP' }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
             </div>
 
             <!-- Franja inferior: banda verde suave con Despacho directo a pie de obra -->
@@ -498,11 +663,11 @@ import Swal from 'sweetalert2';
             <div class="mt-5 space-y-3 text-sm">
               <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                 <span>Subtotal (base)</span>
-                <span class="font-bold text-slate-900 dark:text-white">{{ cart.subtotalBase() | currency: 'COP' }}</span>
+                <span class="font-bold text-slate-900 dark:text-white">{{ summarySubtotalBase() | currency: 'COP' }}</span>
               </div>
               <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                 <span>IVA ({{ (cart.taxes().rate * 100).toFixed(0) }}%)</span>
-                <span class="font-bold text-slate-900 dark:text-white">{{ cart.iva() | currency: 'COP' }}</span>
+                <span class="font-bold text-slate-900 dark:text-white">{{ summaryIva() | currency: 'COP' }}</span>
               </div>
               <div class="flex justify-between items-center text-slate-600 dark:text-slate-400">
                 <span>Despacho</span>
@@ -514,12 +679,14 @@ import Swal from 'sweetalert2';
               <div class="border-t border-slate-100 dark:border-slate-800 pt-4 mt-4">
                 <div class="flex justify-between items-baseline">
                   <div>
-                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">Total a pagar</p>
+                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">
+                      {{ !cart.isEmpty() ? 'Total nueva solicitud' : 'Total en curso' }}
+                    </p>
                     <p class="text-[10px] text-slate-400 dark:text-slate-500">IVA incluido · COP</p>
                   </div>
                   <div class="text-right">
                     <p class="text-[30px] font-black tracking-tight text-slate-950 dark:text-white leading-none">
-                      {{ cart.total() | currency: 'COP' }}
+                      {{ summaryTotal() | currency: 'COP' }}
                     </p>
                   </div>
                 </div>
@@ -541,15 +708,62 @@ import Swal from 'sweetalert2';
               </div>
             }
 
+            <!-- Avisos individuales de pedidos activos (Confirmados o Pendientes) -->
+            @for (order of activeOrders(); track order.id) {
+              @if (order.status === 'Confirmed') {
+                <div class="mt-4 rounded-xl border border-emerald-300 bg-emerald-50 p-3.5 text-xs text-emerald-900 flex items-start gap-2.5 dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-200">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  <div>
+                    <p class="font-bold">Pedido {{ order.saleNumber }} confirmado</p>
+                    <p class="mt-0.5 text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed text-[11px]">
+                      Aprobado por el administrador. Sus productos permanecen aquí hasta que se marque como entregado.
+                    </p>
+                  </div>
+                </div>
+              } @else if (order.status === 'Pending') {
+                <div class="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-900 flex items-start gap-2.5 dark:border-amber-500/30 dark:bg-amber-950/40 dark:text-amber-200">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  <div>
+                    <p class="font-bold">Solicitud {{ order.saleNumber }} enviada</p>
+                    <p class="mt-0.5 text-amber-800/90 dark:text-amber-300/80 leading-relaxed text-[11px]">
+                      Esperando confirmación por parte del administrador.
+                    </p>
+                  </div>
+                </div>
+              }
+            }
+
             <!-- Botón principal azul de 52px con sombra suave -->
             <button
               type="button"
-              class="mt-6 h-[52px] w-full rounded-xl bg-[#1F5BFF] hover:bg-[#1a4ed9] text-base font-black text-white shadow-lg shadow-blue-500/25 transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
-              [disabled]="saving() || isCustomerPending()"
+              class="mt-6 h-[52px] w-full rounded-xl text-base font-black text-white shadow-lg transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+              [class]="cart.isEmpty() && isStep2ConfirmedGreen()
+                ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/25'
+                : 'bg-[#1F5BFF] hover:bg-[#1a4ed9] shadow-blue-500/25'"
+              [disabled]="saving() || isCustomerPending() || cart.isEmpty()"
               (click)="confirmPurchase()"
             >
-              <span>{{ saving() ? 'Procesando pedido…' : isCustomerPending() ? 'Cuenta en revisión' : 'Confirmar pedido' }}</span>
-              @if (!saving() && !isCustomerPending()) {
+              <span>
+                @if (saving()) {
+                  Procesando pedido…
+                } @else if (isCustomerPending()) {
+                  Cuenta en revisión
+                } @else if (!cart.isEmpty()) {
+                  Confirmar pedido
+                } @else if (isStep2ConfirmedGreen()) {
+                  Confirmado · Esperando entrega
+                } @else if (isStep2Pending()) {
+                  Esperando confirmación del admin…
+                } @else {
+                  Confirmar pedido
+                }
+              </span>
+              @if (!saving() && !isCustomerPending() && !cart.isEmpty()) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="h-4 w-4">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -593,37 +807,116 @@ import Swal from 'sweetalert2';
 export class CheckoutComponent implements OnInit, OnDestroy {
   protected readonly cart = inject(CartService);
   private readonly salesService = inject(SalesService);
+  private readonly decisionService = inject(SaleDecisionService, { optional: true });
   private readonly confirmService = inject(ConfirmService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly productsService = inject(ProductsService, { optional: true });
   private readonly notificationService = inject(AdminNotificationService, { optional: true });
   private readonly importsService = inject(ImportsService, { optional: true });
+  private readonly ngZone = inject(NgZone);
   protected readonly authService = inject(AuthService, { optional: true });
 
   private stockChangeSub?: Subscription;
+  private pollSub?: Subscription;
 
   protected readonly isCustomerPending = computed(() => this.authService?.isCustomerPending() ?? false);
 
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly featuredProducts = signal<Product[]>([]);
+
+  /** Pedidos activos individuales (en estado Pending o Confirmed) cuyos productos siguen en el carrito hasta ser Entregados o Cancelados */
+  protected readonly activeOrders = signal<Sale[]>([]);
+
+  /** Última venta relevante para el stepper (o la última entregada para abrir el recibo) */
   protected readonly trackedSale = signal<SaleSummary | null>(null);
 
-  /**
-   * Calcula en qué etapa visual se encuentra el indicador 1 Carrito -> 2 Confirmación -> 3 Recibo:
-   * - Si el cliente está armando un carrito nuevo (!cart.isEmpty() && !saving()): Etapa 1 (Carrito)
-   * - Si está enviando la solicitud o su última solicitud está en 'Pending' (esperando confirmación del admin): Etapa 2 (Confirmación)
-   * - Si el administrador ya aprobó/entregó su última solicitud ('Confirmed' | 'Delivered') y el carrito está vacío: Etapa 3 (Recibo)
-   */
-  protected readonly activeStepperStage = computed<1 | 2 | 3>(() => {
-    if (this.saving()) return 2;
-    if (!this.cart.isEmpty()) return 1;
-    const latest = this.trackedSale();
-    if (!latest) return 1;
-    if (latest.status === 'Pending') return 2;
-    if (latest.status === 'Confirmed' || latest.status === 'Delivered') return 3;
-    return 1;
+  /** Lista aplanada de líneas de pedidos activos (Pending / Confirmed) con su estado individual */
+  protected readonly activeOrderLines = computed<ActiveOrderProductLine[]>(() => {
+    const orders = this.activeOrders();
+    const result: ActiveOrderProductLine[] = [];
+    for (const sale of orders) {
+      for (const line of sale.lines) {
+        result.push({
+          sale,
+          line,
+          product: {
+            id: line.productId,
+            sku: line.productSku,
+            name: line.productName,
+            description: null,
+            category: 'Materiales',
+            unit: 'Unidad',
+            price: line.unitPrice,
+            stock: Math.max(line.quantity, 10),
+            isActive: true,
+            createdAt: sale.saleDate,
+            updatedAt: null
+          }
+        });
+      }
+    }
+    return result;
+  });
+
+  /** Total de unidades visibles (nuevas en carrito + solicitadas en curso) */
+  protected readonly totalVisibleUnits = computed(() => {
+    const newCount = this.cart.count();
+    const activeCount = this.activeOrderLines().reduce((acc, item) => acc + item.line.quantity, 0);
+    return newCount + activeCount;
+  });
+
+  /** Subtotal, IVA y Total del panel derecho: si hay productos nuevos por pedir muestra el total de la nueva solicitud; si no, el de los pedidos activos */
+  protected readonly summaryTotal = computed(() => {
+    if (!this.cart.isEmpty()) {
+      return this.cart.total();
+    }
+    return this.activeOrders().reduce((acc, order) => acc + order.total, 0);
+  });
+
+  protected readonly summarySubtotalBase = computed(() => {
+    if (!this.cart.isEmpty()) {
+      return this.cart.subtotalBase();
+    }
+    const total = this.summaryTotal();
+    const scale = 100;
+    return (Math.round((Math.abs(total) * scale + Number.EPSILON) / 1.19) / scale) * Math.sign(total);
+  });
+
+  protected readonly summaryIva = computed(() => {
+    if (!this.cart.isEmpty()) {
+      return this.cart.iva();
+    }
+    return this.summaryTotal() - this.summarySubtotalBase();
+  });
+
+  /** Paso 1 queda verde cuando todas las líneas actuales ya fueron enviadas en una solicitud */
+  protected readonly isStep1Green = computed(() => {
+    if (!this.cart.isEmpty()) return false;
+    const sale = this.trackedSale();
+    return Boolean(this.saving() || this.activeOrders().length > 0 || (sale && sale.status === 'Delivered'));
+  });
+
+  /** Paso 2 en espera (ámbar) mientras hay alguna solicitud en Pending */
+  protected readonly isStep2Pending = computed(() => {
+    return Boolean(this.saving() || this.activeOrders().some((o) => o.status === 'Pending'));
+  });
+
+  /** Paso 2 queda verde cuando hay un pedido Confirmado por el admin (y ninguno pendiente sin confirmar) o recién Entregado */
+  protected readonly isStep2ConfirmedGreen = computed(() => {
+    const orders = this.activeOrders();
+    if (orders.some((o) => o.status === 'Confirmed')) {
+      return true;
+    }
+    const sale = this.trackedSale();
+    return Boolean(sale && sale.status === 'Delivered');
+  });
+
+  /** Paso 3 queda verde cuando el admin marca como Entregado */
+  protected readonly isStep3DeliveredGreen = computed(() => {
+    const sale = this.trackedSale();
+    return Boolean(sale && sale.status === 'Delivered');
   });
 
   ngOnInit(): void {
@@ -636,20 +929,64 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.loadLatestOrderForStepper();
+    this.syncOrderAndCartState();
+
     this.stockChangeSub = this.notificationService?.stockOrSaleChanged$?.subscribe(() => {
-      this.loadLatestOrderForStepper();
+      this.syncOrderAndCartState();
+    });
+
+    // Sondeo ligero cada 3s para que el cambio de estado del admin (Confirmado, Entregado o Cancelado con SweetAlert)
+    // se refleje al instante dentro del apartado del carrito sin recargar la página.
+    this.ngZone.runOutsideAngular(() => {
+      this.pollSub = interval(3000).subscribe(() => {
+        this.ngZone.run(() => {
+          this.syncOrderAndCartState();
+        });
+      });
     });
   }
 
   ngOnDestroy(): void {
     this.stockChangeSub?.unsubscribe();
+    this.pollSub?.unsubscribe();
   }
 
-  private loadLatestOrderForStepper(): void {
-    this.salesService.list({ page: 1, pageSize: 1 }).subscribe({
+  /**
+   * Sincroniza los pedidos activos del cliente de forma individual:
+   * - Los pedidos en 'Pending' o 'Confirmed' mantienen sus propios productos visibles en el carrito con su estado individual.
+   * - Los productos nuevos en `CartService` permanecen separados para poder enviar nuevas solicitudes al admin en cualquier momento.
+   * - Cuando el admin marca un pedido como 'Delivered' o 'Cancelled', ese pedido desaparece de `activeOrders()` inmediatamente.
+   * - Dispara al instante el SweetAlert de aprobación/cancelación dentro del carrito mediante SaleDecisionService.
+   */
+  private syncOrderAndCartState(): void {
+    this.salesService.list({ page: 1, pageSize: 20 }).subscribe({
       next: (res) => {
-        this.trackedSale.set(res.items[0] ?? null);
+        const items = res.items ?? [];
+
+        // Mostrar al instante en el carrito cualquier SweetAlert de producto cancelado o aprobado por el admin
+        if (this.decisionService && items.length > 0) {
+          void this.decisionService.notifyDecisions(items);
+        }
+
+        const activeSummaries = items.filter((s) => s.status === 'Pending' || s.status === 'Confirmed');
+        const latestDelivered = items.find((s) => s.status === 'Delivered') ?? null;
+
+        if (activeSummaries.length > 0) {
+          this.trackedSale.set(activeSummaries[0]);
+          forkJoin(
+            activeSummaries.map((summary) =>
+              this.salesService.getById(summary.id).pipe(catchError(() => of(null)))
+            )
+          ).subscribe((fullSales) => {
+            const validSales = fullSales.filter(
+              (s): s is Sale => s !== null && (s.status === 'Pending' || s.status === 'Confirmed')
+            );
+            this.activeOrders.set(validSales);
+          });
+        } else {
+          this.activeOrders.set([]);
+          this.trackedSale.set(latestDelivered);
+        }
       },
       error: () => {}
     });
@@ -657,7 +994,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
   protected openTrackedReceipt(): void {
     const sale = this.trackedSale();
-    if (!sale || (sale.status !== 'Confirmed' && sale.status !== 'Delivered')) return;
+    if (!sale || sale.status !== 'Delivered') return;
     if (this.importsService) {
       this.importsService.preview(this.salesService.receiptUrl(sale.id, true)).subscribe({
         error: () => this.router.navigate(['/compras', sale.id])
@@ -822,7 +1159,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   protected async clear(): Promise<void> {
     const confirmed = await this.confirmService.confirm({
       title: 'Vaciar carrito',
-      message: '¿Vaciar el carrito? Se quitarán todos los productos.',
+      message: '¿Vaciar los productos nuevos del carrito?',
       confirmLabel: 'Vaciar'
     });
     if (confirmed) {
@@ -859,16 +1196,28 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .lines()
       .map((line) => ({ productId: line.product.id, quantity: line.quantity, unitPrice: line.product.price }));
 
-    // customerId en null: el backend lo resuelve desde el correo del token, así el
-    // cliente no puede comprar en nombre de otro. Si lo mandamos, la API lo ignora.
-    // status Pending: el cliente solicita y el administrador confirma después.
+    // Al enviar la solicitud, limpiamos CartService (que solo guarda ítems nuevos sin solicitar)
+    // y agregamos el pedido creado a `activeOrders()` para que permanezca visible en el carrito
+    // con su propio estado individual hasta que el admin lo marque como Entregado o Cancelado.
     this.salesService.create({ customerId: null, status: 'Pending', lines }).subscribe({
       next: (sale) => {
         this.saving.set(false);
         this.cart.clear();
+        this.activeOrders.update((orders) => [sale, ...orders.filter((o) => o.id !== sale.id)]);
+        this.trackedSale.set({
+          id: sale.id,
+          saleNumber: sale.saleNumber,
+          customerId: sale.customerId,
+          customerName: sale.customerName,
+          saleDate: sale.saleDate,
+          status: sale.status,
+          total: sale.total,
+          lineCount: sale.lines.length,
+          decisionNote: sale.decisionNote,
+          decidedAt: sale.decidedAt
+        });
         AdminNotificationService.broadcastNewSale(sale.saleNumber);
         this.toastService.success(`Solicitud ${sale.saleNumber} enviada. Queda pendiente de confirmación.`);
-        this.router.navigate(['/mis-compras']);
       },
       error: (error) => {
         const apiError = toApiError(error);
