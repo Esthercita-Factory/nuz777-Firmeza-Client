@@ -1,21 +1,22 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, inject, signal, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { toApiError } from '../../Services/Api.Service';
 import { AuthService } from '../../Services/auth.service';
-import { CartLine, CartService } from '../../Services/cart.service';
-import { Sale, SalesService } from '../../Services/sales.service';
+import { CartService } from '../../Services/cart.service';
+import { SaleSummary, SalesService } from '../../Services/sales.service';
 import { ConfirmService } from '../../Services/confirm.service';
-import { ToastService } from '../../Services/imports.service';
+import { ImportsService, ToastService } from '../../Services/imports.service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
 import { Product, ProductsService } from '../../Services/products.service';
-import { IconComponent } from '../Shared/Icon.Component';
 import Swal from 'sweetalert2';
 
 /**
  * Carrito y checkout profesional del portal del cliente.
  * Rediseño visual fiel con soporte completo para modo claro y oscuro,
- * flujo de pasos, tarjeta flotante de resumen y sección de productos sugeridos.
+ * flujo de pasos sincronizado con la confirmación del administrador,
+ * tarjeta flotante de resumen y sección de productos sugeridos.
  */
 @Component({
   selector: 'app-checkout',
@@ -44,43 +45,107 @@ import Swal from 'sweetalert2';
             </p>
           </div>
 
-          <!-- Indicador de pasos: 1 Carrito -> 2 Confirmación -> 3 Recibo -->
+          <!-- Indicador de pasos: 1 Carrito -> 2 Confirmación (Admin) -> 3 Recibo -->
           <div class="flex items-center gap-2 sm:gap-3 py-1">
-            <!-- Paso 1 (Activo) -->
+            <!-- Paso 1: Carrito -->
             <div class="flex items-center gap-1.5 sm:gap-2">
-              <span class="flex h-6 w-6 items-center justify-center rounded-full bg-[#1F5BFF] text-xs font-bold text-white shadow-sm">
-                1
+              <span
+                class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold shadow-sm transition-colors duration-200"
+                [class]="activeStepperStage() === 1
+                  ? 'bg-[#1F5BFF] text-white'
+                  : 'bg-emerald-600 text-white'"
+              >
+                @if (activeStepperStage() > 1) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="h-3.5 w-3.5">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                } @else {
+                  1
+                }
               </span>
-              <span class="text-xs sm:text-sm font-bold text-[#1F5BFF]">
+              <span
+                class="text-xs sm:text-sm transition-colors duration-200"
+                [class]="activeStepperStage() === 1
+                  ? 'font-bold text-[#1F5BFF]'
+                  : 'font-bold text-emerald-600 dark:text-emerald-400'"
+              >
                 Carrito
               </span>
             </div>
 
-            <!-- Conector -->
-            <div class="h-px w-5 sm:w-8 bg-slate-300 dark:bg-slate-700"></div>
+            <!-- Conector 1 -> 2 -->
+            <div
+              class="h-px w-5 sm:w-8 transition-colors duration-200"
+              [class]="activeStepperStage() >= 2 ? 'bg-[#1F5BFF]' : 'bg-slate-300 dark:bg-slate-700'"
+            ></div>
 
-            <!-- Paso 2 -->
-            <div class="flex items-center gap-1.5 sm:gap-2">
-              <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-400 dark:text-slate-500">
-                2
+            <!-- Paso 2: Confirmación (por parte del administrador) -->
+            <a
+              [routerLink]="trackedSale() ? '/mis-compras' : null"
+              class="flex items-center gap-1.5 sm:gap-2"
+              [class.cursor-pointer]="!!trackedSale()"
+              [title]="activeStepperStage() === 2 ? 'En espera de confirmación por el administrador' : 'Confirmación del administrador'"
+            >
+              <span
+                class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
+                [class]="activeStepperStage() === 2
+                  ? 'bg-amber-500 text-white shadow-sm ring-4 ring-amber-500/15 animate-pulse'
+                  : activeStepperStage() > 2
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'"
+              >
+                @if (activeStepperStage() > 2) {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="h-3.5 w-3.5">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                } @else {
+                  2
+                }
               </span>
-              <span class="text-xs sm:text-sm font-medium text-slate-400 dark:text-slate-500">
+              <span
+                class="text-xs sm:text-sm transition-colors duration-200"
+                [class]="activeStepperStage() === 2
+                  ? 'font-bold text-amber-600 dark:text-amber-400'
+                  : activeStepperStage() > 2
+                    ? 'font-bold text-emerald-600 dark:text-emerald-400'
+                    : 'font-medium text-slate-400 dark:text-slate-500'"
+              >
                 Confirmación
               </span>
-            </div>
+            </a>
 
-            <!-- Conector -->
-            <div class="h-px w-5 sm:w-8 bg-slate-300 dark:bg-slate-700"></div>
+            <!-- Conector 2 -> 3 -->
+            <div
+              class="h-px w-5 sm:w-8 transition-colors duration-200"
+              [class]="activeStepperStage() === 3 ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'"
+            ></div>
 
-            <!-- Paso 3 -->
-            <div class="flex items-center gap-1.5 sm:gap-2">
-              <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-bold text-slate-400 dark:text-slate-500">
+            <!-- Paso 3: Recibo (habilitado cuando el admin confirma/entrega) -->
+            <button
+              type="button"
+              [disabled]="activeStepperStage() < 3 || !trackedSale()"
+              (click)="openTrackedReceipt()"
+              class="flex items-center gap-1.5 sm:gap-2 disabled:cursor-default"
+              [class.cursor-pointer]="activeStepperStage() === 3 && !!trackedSale()"
+              [title]="activeStepperStage() === 3 ? 'Ver recibo PDF de tu compra aprobada' : 'Disponible cuando el administrador confirme el pedido'"
+            >
+              <span
+                class="flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-colors duration-200"
+                [class]="activeStepperStage() === 3
+                  ? 'bg-emerald-600 text-white shadow-sm ring-4 ring-emerald-500/15'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'"
+              >
                 3
               </span>
-              <span class="text-xs sm:text-sm font-medium text-slate-400 dark:text-slate-500">
+              <span
+                class="text-xs sm:text-sm transition-colors duration-200"
+                [class]="activeStepperStage() === 3
+                  ? 'font-bold text-emerald-600 dark:text-emerald-400 underline decoration-emerald-500/50 underline-offset-4'
+                  : 'font-medium text-slate-400 dark:text-slate-500'"
+              >
                 Recibo
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -525,23 +590,43 @@ import Swal from 'sweetalert2';
     </div>
   `
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent implements OnInit, OnDestroy {
   protected readonly cart = inject(CartService);
   private readonly salesService = inject(SalesService);
   private readonly confirmService = inject(ConfirmService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly productsService = inject(ProductsService, { optional: true });
+  private readonly notificationService = inject(AdminNotificationService, { optional: true });
+  private readonly importsService = inject(ImportsService, { optional: true });
   protected readonly authService = inject(AuthService, { optional: true });
+
+  private stockChangeSub?: Subscription;
 
   protected readonly isCustomerPending = computed(() => this.authService?.isCustomerPending() ?? false);
 
   protected readonly saving = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly featuredProducts = signal<Product[]>([]);
+  protected readonly trackedSale = signal<SaleSummary | null>(null);
+
+  /**
+   * Calcula en qué etapa visual se encuentra el indicador 1 Carrito -> 2 Confirmación -> 3 Recibo:
+   * - Si el cliente está armando un carrito nuevo (!cart.isEmpty() && !saving()): Etapa 1 (Carrito)
+   * - Si está enviando la solicitud o su última solicitud está en 'Pending' (esperando confirmación del admin): Etapa 2 (Confirmación)
+   * - Si el administrador ya aprobó/entregó su última solicitud ('Confirmed' | 'Delivered') y el carrito está vacío: Etapa 3 (Recibo)
+   */
+  protected readonly activeStepperStage = computed<1 | 2 | 3>(() => {
+    if (this.saving()) return 2;
+    if (!this.cart.isEmpty()) return 1;
+    const latest = this.trackedSale();
+    if (!latest) return 1;
+    if (latest.status === 'Pending') return 2;
+    if (latest.status === 'Confirmed' || latest.status === 'Delivered') return 3;
+    return 1;
+  });
 
   ngOnInit(): void {
-    // Si el carrito está vacío o se entra directamente, cargar sugerencias para "Lo más pedido"
     if (this.productsService) {
       this.productsService.list({ pageSize: 4, onlyActive: true }).subscribe({
         next: (response) => {
@@ -549,6 +634,36 @@ export class CheckoutComponent implements OnInit {
         },
         error: () => {}
       });
+    }
+
+    this.loadLatestOrderForStepper();
+    this.stockChangeSub = this.notificationService?.stockOrSaleChanged$?.subscribe(() => {
+      this.loadLatestOrderForStepper();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.stockChangeSub?.unsubscribe();
+  }
+
+  private loadLatestOrderForStepper(): void {
+    this.salesService.list({ page: 1, pageSize: 1 }).subscribe({
+      next: (res) => {
+        this.trackedSale.set(res.items[0] ?? null);
+      },
+      error: () => {}
+    });
+  }
+
+  protected openTrackedReceipt(): void {
+    const sale = this.trackedSale();
+    if (!sale || (sale.status !== 'Confirmed' && sale.status !== 'Delivered')) return;
+    if (this.importsService) {
+      this.importsService.preview(this.salesService.receiptUrl(sale.id, true)).subscribe({
+        error: () => this.router.navigate(['/compras', sale.id])
+      });
+    } else {
+      this.router.navigate(['/compras', sale.id]);
     }
   }
 
@@ -559,11 +674,11 @@ export class CheckoutComponent implements OnInit {
   protected lineBase(price: number, quantity: number): number {
     const total = price * quantity;
     const scale = 100;
-    return Math.round((Math.abs(total) * scale + Number.EPSILON) / 1.19) / scale * Math.sign(total);
+    return (Math.round((Math.abs(total) * scale + Number.EPSILON) / 1.19) / scale) * Math.sign(total);
   }
 
   protected lineIva(price: number, quantity: number): number {
-    return (price * quantity) - this.lineBase(price, quantity);
+    return price * quantity - this.lineBase(price, quantity);
   }
 
   protected addFeaturedProduct(product: Product): void {

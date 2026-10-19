@@ -61,6 +61,8 @@ export const routes: Routes = [
     canActivate: [customerGuard],
     children: [
       { path: 'tienda', component: ShopComponent },
+      { path: 'tienda/producto/:sku', component: ShopComponent },
+      { path: 'producto/:sku', component: ShopComponent },
       { path: 'carrito', component: CheckoutComponent },
       { path: 'mis-compras', component: MyOrdersComponent },
       // El detalle lo comparte el panel y el portal: la API ya lo limita a las

@@ -1,7 +1,7 @@
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { toApiError } from '../../Services/Api.Service';
 import { AdminNotificationService } from '../../Services/admin-notification.service';
@@ -10,6 +10,12 @@ import { CartService } from '../../Services/cart.service';
 import { Product, ProductsService } from '../../Services/products.service';
 import { ToastService } from '../../Services/imports.service';
 import { ConfirmService } from '../../Services/confirm.service';
+import {
+  MOCK_PRODUCT_DETAILS,
+  ProductDetailDrawerComponent,
+  ProductDetailModel,
+  RelatedCatalogCard
+} from './ProductDetailDrawer.Component';
 import Swal from 'sweetalert2';
 
 export interface CatalogProduct extends Product {
@@ -24,7 +30,7 @@ export interface CatalogProduct extends Product {
  */
 @Component({
   selector: 'app-shop',
-  imports: [FormsModule, RouterLink, CurrencyPipe],
+  imports: [FormsModule, RouterLink, CurrencyPipe, ProductDetailDrawerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="max-w-[1320px] mx-auto space-y-6 pb-12">
@@ -207,7 +213,14 @@ export interface CatalogProduct extends Product {
         <!-- REJILLA PRINCIPAL DE PRODUCTOS (2x2 EN MÓVIL, RESPONSIVE) -->
         <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
           @for (product of displayedProducts(); track product.id) {
-            <article class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 sm:p-4 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-blue-400/70 hover:shadow-xl hover:shadow-blue-500/10">
+            <article
+              tabindex="0"
+              role="button"
+              [attr.aria-label]="'Ver detalle de ' + product.name"
+              (click)="openProductDetail(product)"
+              (keydown.enter)="openProductDetail(product)"
+              class="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 sm:p-4 shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-blue-400/70 hover:shadow-xl hover:shadow-blue-500/10 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
+            >
               <div>
                 <!-- Cabecera de la tarjeta: Categoría y SKU -->
                 <div class="flex items-center justify-between gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-2">
@@ -302,7 +315,7 @@ export interface CatalogProduct extends Product {
                 </div>
 
                 <!-- ACCIONES DE COMPRA -->
-                <div>
+                <div (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
                   @if (cart.quantityOf(product.id) > 0) {
                     <!-- Stepper interactivo dentro del carrito -->
                     <div class="flex items-center justify-between gap-1 rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/40 p-1">
@@ -428,6 +441,19 @@ export interface CatalogProduct extends Product {
           </div>
         </nav>
       }
+
+      <!-- DRAWER DE DETALLE DE PRODUCTO -->
+      <app-product-detail-drawer
+        [isOpen]="drawerOpen()"
+        [productInput]="selectedProductDetail()"
+        [isLoadingInput]="drawerLoading()"
+        [hasErrorInput]="drawerError()"
+        [relatedProducts]="displayedProducts()"
+        (closed)="closeProductDetail()"
+        (addToCart)="onDrawerAddToCart($event)"
+        (selectRelated)="openProductDetail($event)"
+        (retry)="retryLoadSkuDetail()"
+      />
     </div>
   `
 })
@@ -438,6 +464,8 @@ export class ShopComponent implements OnInit, OnDestroy {
   private readonly toastService = inject(ToastService);
   private readonly confirmService = inject(ConfirmService);
   protected readonly authService = inject(AuthService, { optional: true });
+  private readonly route = inject(ActivatedRoute, { optional: true });
+  private readonly location = inject(Location, { optional: true });
 
   protected readonly isCustomerPending = computed(() => this.authService?.isCustomerPending() ?? false);
 
@@ -447,6 +475,7 @@ export class ShopComponent implements OnInit, OnDestroy {
   private static capacitiesSaveTimeout?: ReturnType<typeof setTimeout>;
 
   private stockChangeSub?: Subscription;
+  private routeSub?: Subscription;
   private searchDebounceTimeout?: ReturnType<typeof setTimeout>;
 
   protected readonly products = signal<Product[]>([]);
@@ -455,6 +484,13 @@ export class ShopComponent implements OnInit, OnDestroy {
   protected readonly page = signal(1);
   protected readonly totalPages = signal(0);
   protected readonly totalCount = signal(0);
+
+  /** Estado del drawer lateral de detalle de producto */
+  protected readonly drawerOpen = signal(false);
+  protected readonly selectedProductDetail = signal<ProductDetailModel | null>(null);
+  protected readonly drawerLoading = signal(false);
+  protected readonly drawerError = signal(false);
+  private pendingRouteSku: string | null = null;
 
   protected queryText = '';
   protected readonly selectedCategory = signal<string>('all');
@@ -689,6 +725,15 @@ export class ShopComponent implements OnInit, OnDestroy {
       });
     }
     this.checkPendingCustomerAlert();
+
+    this.routeSub = this.route?.paramMap?.subscribe((params) => {
+      const sku = params.get('sku')?.trim() ?? null;
+      if (sku) {
+        this.pendingRouteSku = sku;
+        this.resolveDirectSku(sku);
+      }
+    });
+
     this.load();
     this.stockChangeSub = this.notificationService.stockOrSaleChanged$.subscribe(() => {
       this.load(true);
@@ -701,6 +746,7 @@ export class ShopComponent implements OnInit, OnDestroy {
     }
     ShopComponent.flushCapacities();
     this.stockChangeSub?.unsubscribe();
+    this.routeSub?.unsubscribe();
   }
 
   protected onQueryTextChange(value: string): void {
@@ -1092,6 +1138,112 @@ export class ShopComponent implements OnInit, OnDestroy {
     }
   }
 
+  protected openProductDetail(product: CatalogProduct | RelatedCatalogCard): void {
+    const detail = ProductDetailDrawerComponent.fromCatalogProduct(product, product.image);
+    this.drawerLoading.set(false);
+    this.drawerError.set(false);
+    this.selectedProductDetail.set(detail);
+    this.drawerOpen.set(true);
+    this.pendingRouteSku = detail.sku;
+    this.location?.replaceState(`/producto/${encodeURIComponent(detail.sku)}`);
+  }
+
+  protected closeProductDetail(): void {
+    this.drawerOpen.set(false);
+    this.pendingRouteSku = null;
+    this.location?.replaceState('/tienda');
+  }
+
+  protected onDrawerAddToCart(payload: { product: ProductDetailModel; quantity: number; unitPrice: number }): void {
+    const { product, quantity, unitPrice } = payload;
+    const catalogMatch = this.products().find(
+      (p) => p.id === product.id || p.sku.toUpperCase() === product.sku.toUpperCase()
+    );
+
+    const targetProduct: Product = catalogMatch
+      ? { ...catalogMatch, price: unitPrice }
+      : {
+          id: product.id,
+          sku: product.sku,
+          name: product.nombre,
+          description: product.descripcion_corta,
+          category: product.categoria,
+          unit: product.unidad,
+          price: unitPrice,
+          stock: product.stock,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: null
+        };
+
+    const available = this.cart.availableToAdd(targetProduct);
+    if (available <= 0) {
+      this.toastService.error('No hay más unidades disponibles de este producto.');
+      return;
+    }
+
+    const toAdd = Math.min(quantity, available);
+    this.cart.add(targetProduct, toAdd);
+    this.toastService.success(`${targetProduct.name} (${toAdd} ${targetProduct.unit}) agregado al carrito.`);
+  }
+
+  protected retryLoadSkuDetail(): void {
+    if (this.pendingRouteSku) {
+      this.resolveDirectSku(this.pendingRouteSku);
+    }
+  }
+
+  private resolveDirectSku(sku: string): void {
+    const normalized = sku.trim().toUpperCase();
+
+    // 1. Verificar en los 3 productos mock si coincide el SKU (CEM-001, ACE-002, AGR-003)
+    const mockFound = MOCK_PRODUCT_DETAILS.find((m) => m.sku.toUpperCase() === normalized);
+    if (mockFound) {
+      this.drawerLoading.set(false);
+      this.drawerError.set(false);
+      this.selectedProductDetail.set(mockFound);
+      this.drawerOpen.set(true);
+      return;
+    }
+
+    // 2. Verificar en los productos ya cargados del catálogo
+    const existing = this.displayedProducts().find((p) => (p.sku || '').toUpperCase() === normalized);
+    if (existing) {
+      this.openProductDetail(existing);
+      return;
+    }
+
+    // 3. Buscar por SKU en el servicio del catálogo
+    this.drawerOpen.set(true);
+    this.drawerLoading.set(true);
+    this.drawerError.set(false);
+
+    this.productsService
+      .list({
+        q: sku,
+        onlyActive: true,
+        page: 1,
+        pageSize: 12
+      })
+      .subscribe({
+        next: (res) => {
+          this.drawerLoading.set(false);
+          const match =
+            res.items.find((p) => (p.sku || '').toUpperCase() === normalized) ?? res.items[0] ?? null;
+          if (match) {
+            const img = this.getProductImage(match);
+            this.selectedProductDetail.set(ProductDetailDrawerComponent.fromCatalogProduct(match, img));
+          } else {
+            this.drawerError.set(true);
+          }
+        },
+        error: () => {
+          this.drawerLoading.set(false);
+          this.drawerError.set(true);
+        }
+      });
+  }
+
   private load(silent = false): void {
     if (!silent) {
       this.loading.set(true);
@@ -1117,6 +1269,15 @@ export class ShopComponent implements OnInit, OnDestroy {
           this.totalPages.set(response.totalPages);
           this.totalCount.set(response.totalCount);
           this.cart.syncWithProducts(response.items);
+
+          if (this.pendingRouteSku && !this.selectedProductDetail()) {
+            const match = this.displayedProducts().find(
+              (p) => (p.sku || '').toUpperCase() === this.pendingRouteSku!.toUpperCase()
+            );
+            if (match) {
+              this.openProductDetail(match);
+            }
+          }
         },
         error: (error) => {
           this.loading.set(false);
