@@ -920,6 +920,12 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+
     if (this.productsService) {
       this.productsService.list({ pageSize: 4, onlyActive: true }).subscribe({
         next: (response) => {

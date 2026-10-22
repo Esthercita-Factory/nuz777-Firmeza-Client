@@ -46,6 +46,7 @@ export class AuthCallbackComponent implements OnInit {
     const accessTokenExpiresAt = params.get('accessTokenExpiresAt');
     const refreshToken = params.get('refreshToken');
     const refreshTokenExpiresAt = params.get('refreshTokenExpiresAt');
+    const avatarUrl = params.get('avatarUrl');
 
     if (!accessToken || !refreshToken) {
       void Swal.fire({
@@ -84,7 +85,8 @@ export class AuthCallbackComponent implements OnInit {
         email: payload['email'] ?? '',
         fullName: payload['name'] ?? payload['unique_name'] ?? 'Usuario',
         roles,
-        customerStatus: 'RequiresProfile'
+        customerStatus: 'RequiresProfile',
+        avatarUrl: payload['picture'] ?? avatarUrl ?? null
       }
     };
 
@@ -98,7 +100,10 @@ export class AuthCallbackComponent implements OnInit {
 
     this.authService.me().subscribe({
       next: (profile) => {
-        this.authService.updateCurrentUser(profile);
+        this.authService.updateCurrentUser({
+          ...profile,
+          avatarUrl: profile.avatarUrl || tokenResponse.user.avatarUrl || null
+        });
         this.router.navigate(['/tienda']);
       },
       error: () => {

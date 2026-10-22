@@ -10,6 +10,7 @@ export interface UserSession {
   fullName: string;
   roles: string[];
   customerStatus?: 'Pending' | 'Approved' | 'Rejected' | string;
+  avatarUrl?: string | null;
 }
 
 export interface TokenResponse {

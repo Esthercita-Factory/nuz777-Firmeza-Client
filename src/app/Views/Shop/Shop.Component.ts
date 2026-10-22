@@ -352,7 +352,7 @@ export interface CatalogProduct extends Product {
                         type="button"
                         (click)="incrementCart(product)"
                         [disabled]="cart.quantityOf(product.id) >= product.stock"
-                        class="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-[#1F5BFF] font-black text-white shadow-2xs transition hover:bg-[#1a4ed9] active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 cursor-pointer"
+                        class="btn-catalog-cart-add flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 dark:bg-blue-600 font-black text-white shadow-2xs transition hover:bg-blue-700 dark:hover:bg-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 dark:disabled:bg-slate-700 disabled:text-slate-400 cursor-pointer"
                         title="Agregar una unidad más"
                       >
                         <span class="text-sm sm:text-base leading-none">+</span>
@@ -362,7 +362,7 @@ export interface CatalogProduct extends Product {
                     <!-- Botón normal para agregar -->
                     <button
                       type="button"
-                      class="flex h-8 sm:h-10 w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-[#1F5BFF] text-[11px] sm:text-xs font-bold text-white shadow-xs transition hover:bg-[#1a4ed9] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:shadow-none cursor-pointer"
+                      class="btn-catalog-cart-add flex h-8 sm:h-10 w-full items-center justify-center gap-1.5 sm:gap-2 rounded-xl bg-blue-600 dark:bg-blue-600 text-[11px] sm:text-xs font-bold text-white shadow-xs transition hover:bg-blue-700 dark:hover:bg-blue-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 disabled:shadow-none cursor-pointer"
                       [disabled]="product.stock <= 0"
                       (click)="add(product)"
                     >
@@ -454,6 +454,42 @@ export interface CatalogProduct extends Product {
         (selectRelated)="openProductDetail($event)"
         (retry)="retryLoadSkuDetail()"
       />
+
+      <!-- BOTÓN FLOTANTE AZUL DEL CARRITO (Exclusivo de Catálogo de Materiales) -->
+      <a
+        routerLink="/carrito"
+        (click)="onFloatingCartClick()"
+        [class.opacity-0]="drawerOpen()"
+        [class.pointer-events-none]="drawerOpen()"
+        class="fixed z-50 bottom-[148px] right-4 sm:bottom-8 sm:right-8 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-[#1a5cff] text-white shadow-2xl shadow-blue-500/40 ring-4 ring-white/80 dark:ring-slate-900/80 transition-all duration-300 hover:scale-110 hover:bg-blue-600 active:scale-95 cursor-pointer group"
+        aria-label="Ir al carrito de compras"
+        title="Ver carrito de compras"
+      >
+        <!-- Ícono del carrito -->
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="h-6 w-6 sm:h-7 sm:w-7 transition-transform duration-300 group-hover:scale-110"
+        >
+          <circle cx="8" cy="21" r="1" />
+          <circle cx="19" cy="21" r="1" />
+          <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+        </svg>
+
+        <!-- Indicador numérico de productos en el carrito -->
+        <span
+          class="absolute -top-1 -right-1 flex min-h-[22px] min-w-[22px] sm:min-h-[24px] sm:min-w-[24px] items-center justify-center rounded-full px-1.5 text-xs font-black text-white shadow-md ring-2 ring-white dark:ring-slate-900 transition-transform duration-200"
+          [class.bg-rose-600]="cart.count() > 0"
+          [class.scale-110]="cart.count() > 0"
+          [class.bg-slate-700]="cart.count() === 0"
+        >
+          {{ cart.count() > 99 ? '99+' : cart.count() }}
+        </span>
+      </a>
     </div>
   `
 })
@@ -466,6 +502,14 @@ export class ShopComponent implements OnInit, OnDestroy {
   protected readonly authService = inject(AuthService, { optional: true });
   private readonly route = inject(ActivatedRoute, { optional: true });
   private readonly location = inject(Location, { optional: true });
+
+  protected onFloatingCartClick(): void {
+    if (typeof window !== 'undefined') {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }
 
   protected readonly isCustomerPending = computed(() => this.authService?.isCustomerPending() ?? false);
 

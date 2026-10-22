@@ -28,9 +28,9 @@ import { ThemeService } from '../../Services/theme.service';
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
           </svg>
         } @else {
-          <!-- Icono Sol / Modo Día -->
+          <!-- Icono Sol / Modo Día (oscuro) -->
           <svg
-            class="h-6 w-6 text-amber-500 transition-transform duration-300 hover:rotate-45"
+            class="h-6 w-6 text-slate-800 transition-transform duration-300 hover:rotate-45 hover:text-black"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -67,9 +67,9 @@ import { ThemeService } from '../../Services/theme.service';
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
           </svg>
         } @else {
-          <!-- Icono Sol / Modo Día -->
+          <!-- Icono Sol / Modo Día (oscuro) -->
           <svg
-            class="h-full w-full text-amber-500 transition-transform duration-300 rotate-0 hover:rotate-45"
+            class="h-full w-full text-slate-800 transition-transform duration-300 rotate-0 hover:rotate-45 hover:text-black"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
@@ -97,12 +97,13 @@ import { ThemeService } from '../../Services/theme.service';
       }
       .theme-toggle-light {
         background-color: rgba(255, 255, 255, 0.9);
-        border-color: rgba(226, 232, 240, 0.9);
+        border-color: rgba(148, 163, 184, 0.6);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
       .theme-toggle-light:hover {
         background-color: #ffffff;
-        border-color: rgba(245, 158, 11, 0.5);
+        border-color: rgba(15, 23, 42, 0.7);
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
       }
 
       .theme-toggle-fab-dark {
@@ -117,13 +118,13 @@ import { ThemeService } from '../../Services/theme.service';
       }
       .theme-toggle-fab-light {
         background-color: rgba(255, 255, 255, 0.95);
-        border-color: rgba(226, 232, 240, 0.95);
-        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.12), 0 0 20px rgba(245, 158, 11, 0.25);
+        border-color: rgba(148, 163, 184, 0.6);
+        box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.12), 0 0 15px rgba(15, 23, 42, 0.12);
       }
       .theme-toggle-fab-light:hover {
         background-color: #ffffff;
-        border-color: rgba(245, 158, 11, 0.6);
-        box-shadow: 0 14px 30px -3px rgba(0, 0, 0, 0.18), 0 0 25px rgba(245, 158, 11, 0.4);
+        border-color: rgba(15, 23, 42, 0.7);
+        box-shadow: 0 14px 30px -3px rgba(0, 0, 0, 0.18), 0 0 20px rgba(15, 23, 42, 0.2);
       }
     `
   ]

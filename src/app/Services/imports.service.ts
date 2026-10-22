@@ -132,39 +132,111 @@ export class ImportsService {
   }
 }
 
-/** Avisos flotantes de la aplicación (sustituyen a TempData del panel Razor). */
+export interface ToastItem {
+  id: number;
+  kind: 'success' | 'error' | 'info';
+  message: string;
+  count: number;
+  durationMs: number;
+  progressKey: number;
+  leaving?: boolean;
+}
+
+/** Avisos flotantes de la aplicación (con anti-spam y animación fluida). */
 @Injectable({
   providedIn: 'root'
 })
 export class ToastService {
-  private readonly items = signal<{ id: number; kind: 'success' | 'error' | 'info'; message: string }[]>([]);
+  private readonly items = signal<ToastItem[]>([]);
   private nextId = 1;
+  private readonly timers = new Map<number, ReturnType<typeof setTimeout>>();
+  private readonly MAX_CONCURRENT = 3;
 
   readonly toasts = this.items.asReadonly();
 
-  success(message: string): void {
-    this.show('success', message);
+  success(message: string, durationMs = 3500): void {
+    this.show('success', message, durationMs);
   }
 
-  error(message: string): void {
-    this.show('error', message);
+  error(message: string, durationMs = 6000): void {
+    this.show('error', message, durationMs);
   }
 
-  info(message: string): void {
-    this.show('info', message);
+  info(message: string, durationMs = 3500): void {
+    this.show('info', message, durationMs);
   }
 
-  warning(message: string): void {
-    this.show('info', message);
+  warning(message: string, durationMs = 4000): void {
+    this.show('info', message, durationMs);
   }
 
   dismiss(id: number): void {
-    this.items.update((current) => current.filter((toast) => toast.id !== id));
+    const timer = this.timers.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      this.timers.delete(id);
+    }
+
+    const currentItem = this.items().find((t) => t.id === id);
+    if (!currentItem || currentItem.leaving) {
+      return;
+    }
+
+    // Activa la animación de salida
+    this.items.update((current) =>
+      current.map((toast) => (toast.id === id ? { ...toast, leaving: true } : toast))
+    );
+
+    // Tras completar la animación CSS (250ms), se elimina del estado
+    setTimeout(() => {
+      this.items.update((current) => current.filter((toast) => toast.id !== id));
+    }, 250);
   }
 
-  private show(kind: 'success' | 'error' | 'info', message: string): void {
+  private show(kind: 'success' | 'error' | 'info', message: string, durationMs: number): void {
+    const currentItems = this.items();
+
+    // Sistema Anti-Spam: si el aviso idéntico ya está activo y visible, agrupar contador y reiniciar temporizador
+    const existing = currentItems.find((t) => !t.leaving && t.message === message && t.kind === kind);
+    if (existing) {
+      const oldTimer = this.timers.get(existing.id);
+      if (oldTimer) {
+        clearTimeout(oldTimer);
+      }
+
+      this.items.update((current) =>
+        current.map((t) =>
+          t.id === existing.id
+            ? { ...t, count: t.count + 1, progressKey: t.progressKey + 1, durationMs }
+            : t
+        )
+      );
+
+      const newTimer = setTimeout(() => this.dismiss(existing.id), durationMs);
+      this.timers.set(existing.id, newTimer);
+      return;
+    }
+
+    // Límite máximo concurrente: descartar el más viejo si supera el límite
+    const active = currentItems.filter((t) => !t.leaving);
+    if (active.length >= this.MAX_CONCURRENT) {
+      this.dismiss(active[0].id);
+    }
+
     const id = this.nextId++;
-    this.items.update((current) => [...current, { id, kind, message }]);
-    setTimeout(() => this.dismiss(id), kind === 'error' ? 8000 : 5000);
+    const newItem: ToastItem = {
+      id,
+      kind,
+      message,
+      count: 1,
+      durationMs,
+      progressKey: 1,
+      leaving: false
+    };
+
+    this.items.update((current) => [...current, newItem]);
+
+    const timer = setTimeout(() => this.dismiss(id), durationMs);
+    this.timers.set(id, timer);
   }
 }

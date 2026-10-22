@@ -508,7 +508,7 @@ type TabKey = 'descripcion' | 'especificaciones' | 'volumen' | 'entrega';
                     @if (prod.stock > 0) {
                       <button
                         type="button"
-                        class="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-4 text-[14px] font-medium text-white hover:bg-[#1d4ed8] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:ring-offset-1 cursor-pointer"
+                        class="btn-catalog-cart-add inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-600 px-4 text-[14px] font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 cursor-pointer"
                         (click)="handleAddToCart()"
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
@@ -748,7 +748,7 @@ type TabKey = 'descripcion' | 'especificaciones' | 'volumen' | 'entrega';
               @if (prod.stock > 0) {
                 <button
                   type="button"
-                  class="inline-flex min-h-[44px] flex-1 max-w-[220px] items-center justify-center gap-1.5 rounded-lg bg-[#2563eb] px-4 text-[14px] font-medium text-white active:bg-[#1d4ed8] cursor-pointer"
+                  class="btn-catalog-cart-add inline-flex min-h-[44px] flex-1 max-w-[220px] items-center justify-center gap-1.5 rounded-lg bg-blue-600 dark:bg-blue-600 px-4 text-[14px] font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-500 active:bg-blue-800 cursor-pointer"
                   (click)="handleAddToCart()"
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">

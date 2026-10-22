@@ -362,8 +362,12 @@ import { ThemeToggleComponent } from '../Shared/ThemeToggle.Component';
                 }
               </div>
 
-              <div class="flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm">
-                <img src="img/admin.png" alt="Admin" class="h-8 w-8 rounded-full object-cover" />
+              <div class="flex items-center gap-3 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                @if (authService.getUser()?.avatarUrl; as avatar) {
+                  <img [src]="avatar" [alt]="authService.getUser()?.fullName" class="h-8 w-8 rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700" />
+                } @else {
+                  <img src="img/admin.png" alt="Admin" class="h-8 w-8 rounded-full object-cover" />
+                }
                 <span class="hidden text-sm font-bold text-slate-700 sm:block">{{ authService.getUser()?.fullName }}</span>
                 <span class="hidden rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-700 sm:block">Admin</span>
               </div>
