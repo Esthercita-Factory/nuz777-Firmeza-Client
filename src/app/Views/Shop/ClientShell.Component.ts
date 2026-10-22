@@ -20,14 +20,14 @@ import { productDetailModalOpenSignal } from './ProductDetailDrawer.Component';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, IconComponent, ThemeToggleComponent, BottomNavComponent],
   template: `
     <div class="relative flex min-h-screen flex-col justify-between overflow-x-hidden bg-slate-50 text-slate-800">
-      <!-- Barra superior limpia y ligera (en PC desaparece al abrir el detalle de producto y reaparece con animación suave al cerrarlo) -->
+      <!-- Barra superior limpia y ligera (al abrir el detalle de producto se oculta con animación suave y reaparece al cerrarlo) -->
       <header
-        class="sticky top-0 z-30 border-b border-slate-200 bg-white sm:transition-all sm:duration-300 sm:ease-out"
-        [class.sm:opacity-0]="isProductDetailOpen()"
-        [class.sm:-translate-y-full]="isProductDetailOpen()"
-        [class.sm:pointer-events-none]="isProductDetailOpen()"
-        [class.sm:opacity-100]="!isProductDetailOpen()"
-        [class.sm:translate-y-0]="!isProductDetailOpen()"
+        class="sticky top-0 z-30 border-b border-slate-200 bg-white transition-all duration-300 ease-out"
+        [class.opacity-0]="isProductDetailOpen()"
+        [class.-translate-y-full]="isProductDetailOpen()"
+        [class.pointer-events-none]="isProductDetailOpen()"
+        [class.opacity-100]="!isProductDetailOpen()"
+        [class.translate-y-0]="!isProductDetailOpen()"
       >
         <div class="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
           <a routerLink="/tienda" class="flex items-center gap-2.5 text-slate-950 transition hover:opacity-90">
@@ -190,14 +190,14 @@ import { productDetailModalOpenSignal } from './ProductDetailDrawer.Component';
         <router-outlet />
       </main>
 
-      <!-- Pie de página con seguridad y datos empresariales (en PC desaparece al abrir el detalle de producto y reaparece con animación suave al cerrarlo) -->
+      <!-- Pie de página con seguridad y datos empresariales (al abrir el detalle de producto se oculta con animación suave y reaparece al cerrarlo) -->
       <footer
-        class="relative z-10 border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500 sm:transition-all sm:duration-300 sm:ease-out"
-        [class.sm:opacity-0]="isProductDetailOpen()"
-        [class.sm:translate-y-full]="isProductDetailOpen()"
-        [class.sm:pointer-events-none]="isProductDetailOpen()"
-        [class.sm:opacity-100]="!isProductDetailOpen()"
-        [class.sm:translate-y-0]="!isProductDetailOpen()"
+        class="relative z-10 border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500 transition-all duration-300 ease-out"
+        [class.opacity-0]="isProductDetailOpen()"
+        [class.translate-y-full]="isProductDetailOpen()"
+        [class.pointer-events-none]="isProductDetailOpen()"
+        [class.opacity-100]="!isProductDetailOpen()"
+        [class.translate-y-0]="!isProductDetailOpen()"
       >
         <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <p>© {{ year }} Firmeza · Materiales de Construcción y Ferretería. Todos los derechos reservados.</p>

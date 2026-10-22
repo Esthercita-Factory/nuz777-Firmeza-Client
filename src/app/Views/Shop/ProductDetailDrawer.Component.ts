@@ -176,28 +176,28 @@ type TabKey = 'descripcion' | 'especificaciones' | 'volumen' | 'entrega';
         aria-modal="true"
         [attr.aria-labelledby]="product() ? 'drawer-product-title' : null"
       >
-        <!-- Overlay oscuro al 45% (animación fade 200ms solo en PC, instantáneo en móvil) -->
+        <!-- Overlay oscuro al 45% (animación fade 200ms) -->
         <div
-          class="fixed inset-0 bg-black/45 transition-none sm:transition-opacity sm:duration-200"
-          [class.sm:opacity-100]="visible()"
-          [class.sm:opacity-0]="!visible()"
+          class="fixed inset-0 bg-black/45 transition-opacity duration-200"
+          [class.opacity-100]="visible()"
+          [class.opacity-0]="!visible()"
           (click)="requestClose()"
           aria-hidden="true"
         ></div>
 
         <!-- Panel Drawer:
-             - Móvil (<640px): pantalla completa, 1 columna, sin animación
+             - Móvil (<640px): pantalla completa, 1 columna
              - Tablet (640-1024px): 85% ancho
              - Escritorio (>1024px): máx 960px
-             - Animación slide + fade 200ms únicamente en PC (>=640px) -->
+             - Animación slide + fade 200ms en todos los dispositivos -->
         <aside
           #drawerPanel
           tabindex="-1"
-          class="relative z-10 flex h-full w-full flex-col bg-white dark:bg-slate-900 border border-[#e5e7eb] dark:border-slate-800 rounded-none sm:rounded-[12px] sm:w-[85%] lg:w-full lg:max-w-[960px] outline-none overflow-hidden transition-none sm:transition-all sm:duration-200 sm:ease-out"
-          [class.sm:translate-x-0]="visible()"
-          [class.sm:opacity-100]="visible()"
-          [class.sm:translate-x-8]="!visible()"
-          [class.sm:opacity-0]="!visible()"
+          class="relative z-10 flex h-full w-full flex-col bg-white dark:bg-slate-900 border border-[#e5e7eb] dark:border-slate-800 rounded-none sm:rounded-[12px] sm:w-[85%] lg:w-full lg:max-w-[960px] outline-none overflow-hidden transition-all duration-200 ease-out"
+          [class.translate-x-0]="visible()"
+          [class.opacity-100]="visible()"
+          [class.translate-x-8]="!visible()"
+          [class.opacity-0]="!visible()"
           (keydown)="onDrawerKeydown($event)"
         >
           <!-- Contenedor con scroll interno y padding de 20px -->
@@ -985,10 +985,6 @@ export class ProductDetailDrawerComponent implements OnChanges, OnDestroy {
     }
   }
 
-  private isDesktopViewport(): boolean {
-    return typeof window !== 'undefined' && window.innerWidth >= 640;
-  }
-
   private openDrawer(): void {
     if (this.closeAnimationTimeout) {
       clearTimeout(this.closeAnimationTimeout);
@@ -1003,20 +999,12 @@ export class ProductDetailDrawerComponent implements OnChanges, OnDestroy {
     this.mounted.set(true);
     productDetailModalOpenSignal.set(true);
 
-    if (this.isDesktopViewport()) {
-      // Animación de entrada de 200 ms en PC
-      this.visible.set(false);
-      setTimeout(() => {
-        this.visible.set(true);
-        this.closeBtnRef?.nativeElement?.focus();
-      }, 16);
-    } else {
-      // En celular aparece de inmediato sin animación
+    // Animación fluida de entrada de 200 ms
+    this.visible.set(false);
+    setTimeout(() => {
       this.visible.set(true);
-      setTimeout(() => {
-        this.closeBtnRef?.nativeElement?.focus();
-      }, 0);
-    }
+      this.closeBtnRef?.nativeElement?.focus();
+    }, 16);
   }
 
   protected requestClose(): void {
@@ -1027,16 +1015,12 @@ export class ProductDetailDrawerComponent implements OnChanges, OnDestroy {
     this.lightboxOpen.set(false);
     productDetailModalOpenSignal.set(false);
 
-    if (this.isDesktopViewport()) {
-      this.visible.set(false);
-      if (this.closeAnimationTimeout) clearTimeout(this.closeAnimationTimeout);
-      this.closeAnimationTimeout = setTimeout(() => {
-        this.finishClose(emitEvent);
-      }, 200);
-    } else {
-      this.visible.set(false);
+    // Animación fluida de salida de 200 ms
+    this.visible.set(false);
+    if (this.closeAnimationTimeout) clearTimeout(this.closeAnimationTimeout);
+    this.closeAnimationTimeout = setTimeout(() => {
       this.finishClose(emitEvent);
-    }
+    }, 200);
   }
 
   private finishClose(emitEvent: boolean): void {
