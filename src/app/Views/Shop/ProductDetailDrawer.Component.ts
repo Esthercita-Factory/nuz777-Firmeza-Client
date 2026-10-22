@@ -201,7 +201,7 @@ type TabKey = 'descripcion' | 'especificaciones' | 'volumen' | 'entrega';
           (keydown)="onDrawerKeydown($event)"
         >
           <!-- Contenedor con scroll interno y padding de 20px -->
-          <div class="flex-1 overflow-y-auto p-[20px] pb-28 sm:pb-[20px]">
+          <div class="flex-1 overflow-y-auto p-[20px] pb-6 sm:pb-[20px]">
             <!-- 1. CABECERA -->
             <header class="flex items-center justify-between gap-3 pb-4 border-b border-[#f3f4f6] dark:border-slate-800">
               <div class="flex flex-wrap items-center gap-2.5 min-w-0">
@@ -503,15 +503,15 @@ type TabKey = 'descripcion' | 'especificaciones' | 'volumen' | 'entrega';
                     </p>
                   }
 
-                  <!-- Botón de acción en tablet/escritorio (en móvil va en la barra sticky inferior) -->
-                  <div class="mt-4 hidden sm:block">
+                  <!-- Botón de acción principal (Agregar al carrito / Avísame) ubicado estratégicamente con el selector -->
+                  <div class="mt-4">
                     @if (prod.stock > 0) {
                       <button
                         type="button"
-                        class="btn-catalog-cart-add inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-lg bg-blue-600 dark:bg-blue-600 px-4 text-[14px] font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 cursor-pointer"
+                        class="btn-catalog-cart-add inline-flex h-12 sm:h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 dark:bg-blue-600 px-4 text-[15px] sm:text-[14px] font-bold sm:font-medium text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 dark:hover:bg-blue-500 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-1 cursor-pointer transition-all"
                         (click)="handleAddToCart()"
                       >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="h-4 w-4">
                           <path d="M12 5v14M5 12h14" />
                         </svg>
                         Agregar al carrito
@@ -519,7 +519,7 @@ type TabKey = 'descripcion' | 'especificaciones' | 'volumen' | 'entrega';
                     } @else {
                       <button
                         type="button"
-                        class="inline-flex h-[42px] w-full items-center justify-center gap-2 rounded-lg border border-[#d1d5db] dark:border-slate-700 bg-[#f9fafb] dark:bg-slate-800 px-4 text-[14px] font-medium text-[#374151] dark:text-slate-200 hover:bg-[#f3f4f6] dark:hover:bg-slate-700 cursor-pointer"
+                        class="inline-flex h-12 sm:h-[42px] w-full items-center justify-center gap-2 rounded-xl border border-[#d1d5db] dark:border-slate-700 bg-[#f9fafb] dark:bg-slate-800 px-4 text-[14px] font-medium text-[#374151] dark:text-slate-200 hover:bg-[#f3f4f6] dark:hover:bg-slate-700 cursor-pointer"
                         (click)="handleNotifyWhenAvailable()"
                       >
                         {{ stockAlertRegistered() ? 'Aviso registrado para este producto' : 'Avísame cuando haya stock' }}
@@ -730,43 +730,6 @@ type TabKey = 'descripcion' | 'especificaciones' | 'volumen' | 'entrega';
               }
             }
           </div>
-
-          <!-- BARRA INFERIOR FIJA (STICKY) EN MÓVIL (<640px):
-               Subtotal a la izquierda y botón "Agregar al carrito" a la derecha, respetando safe-area-inset-bottom -->
-          @if (!loading() && !error() && product(); as prod) {
-            <div
-              class="sm:hidden sticky bottom-0 left-0 right-0 z-20 flex items-center justify-between gap-3 border-t border-[#e5e7eb] dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3"
-              style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));"
-            >
-              <div class="min-w-0">
-                <span class="block text-[11px] font-normal text-[#6b7280] dark:text-slate-400">Subtotal</span>
-                <span class="block truncate text-[16px] font-medium text-[#111827] dark:text-slate-100">
-                  {{ prod.stock > 0 ? formatCOP(liveSubtotal()) : formatCOP(0) }}
-                </span>
-              </div>
-
-              @if (prod.stock > 0) {
-                <button
-                  type="button"
-                  class="btn-catalog-cart-add inline-flex min-h-[44px] flex-1 max-w-[220px] items-center justify-center gap-1.5 rounded-lg bg-blue-600 dark:bg-blue-600 px-4 text-[14px] font-medium text-white hover:bg-blue-700 dark:hover:bg-blue-500 active:bg-blue-800 cursor-pointer"
-                  (click)="handleAddToCart()"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  Agregar al carrito
-                </button>
-              } @else {
-                <button
-                  type="button"
-                  class="inline-flex min-h-[44px] flex-1 max-w-[240px] items-center justify-center rounded-lg border border-[#d1d5db] dark:border-slate-700 bg-[#f9fafb] dark:bg-slate-800 px-3 text-[13px] font-medium text-[#374151] dark:text-slate-200 cursor-pointer"
-                  (click)="handleNotifyWhenAvailable()"
-                >
-                  {{ stockAlertRegistered() ? 'Aviso registrado' : 'Avísame cuando haya stock' }}
-                </button>
-              }
-            </div>
-          }
         </aside>
 
         <!-- LIGHTBOX / ZOOM DE IMAGEN PRINCIPAL -->
